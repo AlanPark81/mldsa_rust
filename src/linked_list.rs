@@ -30,7 +30,7 @@ pub struct LinkedList<T> {
     size: usize
 }
 
-impl<T> LinkedList<T> where T: Clone+Debug{
+impl<T> LinkedList<T> where T: Clone + Debug {
     pub fn new() -> LinkedList<T> {
         LinkedList{
             head:None,
@@ -44,7 +44,7 @@ impl<T> LinkedList<T> where T: Clone+Debug{
     }
 
     pub fn iter(&self) -> ListIterator<T> {
-        ListIterator {next_node:self.head.clone()}
+        ListIterator { next_node: self.head.clone() }
     }
 
     pub fn empty(&self) -> bool {

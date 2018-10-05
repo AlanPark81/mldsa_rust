@@ -26,7 +26,7 @@ fn shell_sort<T>(array: &mut [T]) where T : Ord + Clone {
 mod tests {
     use super::shell_sort;
     extern crate rand;
-    use self::rand::{ thread_rng, Rng, RngCore };
+    use self::rand::{ thread_rng, RngCore };
     #[test]
     fn shell_sort_test() {
         const COUNT:usize=100;

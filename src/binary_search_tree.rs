@@ -47,6 +47,56 @@ impl<T> BinarySearchTree<T> where T : Clone + Ord {
 mod tests {
     use super::*;
     #[test]
+    fn it_contains_one_element_inserted() {
+        let bst=BinarySearchTree::new(0);
+        assert!(bst.contains(0));
+    }
+
+    #[test]
+    fn it_contains_two_element_inserted() {
+        let mut bst=BinarySearchTree::new(0);
+        bst.insert(1);
+        assert!(bst.contains(0));
+        assert!(bst.contains(1));
+    }
+
+    #[test]
+    fn it_contains_three_element_inserted() {
+        let mut bst=BinarySearchTree::new(0);
+        bst.insert(1);
+        bst.insert(2);
+        assert!(bst.contains(0));
+        assert!(bst.contains(1));
+        assert!(bst.contains(2));
+    }
+
+    #[test]
+    fn it_contain_no_not_inserted_element_one_element_inserted() {
+        let bst=BinarySearchTree::new(0);
+        assert!(bst.contains(0));
+        assert!(!bst.contains(13));
+    }
+
+    #[test]
+    fn it_contain_no_not_inserted_element_two_element_inserted() {
+        let mut bst=BinarySearchTree::new(0);
+        bst.insert(1);
+        assert!(bst.contains(0));
+        assert!(bst.contains(1));
+        assert!(!bst.contains(2));
+    }
+
+    #[test]
+    fn it_contain_no_not_inserted_element_three_element_inserted() {
+        let mut bst=BinarySearchTree::new(0);
+        bst.insert(1);
+        bst.insert(2);
+        assert!(bst.contains(0));
+        assert!(bst.contains(1));
+        assert!(bst.contains(2));
+        assert!(!bst.contains(3));
+    }
+
     fn it_insert_and_find() {
         let data=vec![1,2,3,4,5,6,7,8,9,10,11,12];
         let mut binary_search_tree=BinarySearchTree::new(0);

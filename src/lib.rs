@@ -9,11 +9,3 @@ pub mod quick_sort;
 pub mod shell_sort;
 
 extern crate blake2_rfc;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

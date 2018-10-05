@@ -194,6 +194,12 @@ mod tests {
     }
 
     #[test]
+    fn it_contains_no_not_included_element() {
+        let avl_tree=AVLTree::new(0);
+        assert!(!avl_tree.contains(&13));
+    }
+
+    #[test]
     fn it_works() {
         let mut avl_tree=AVLTree::new(0);
         for i in 1..10 {
