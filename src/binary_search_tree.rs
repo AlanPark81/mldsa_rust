@@ -96,17 +96,4 @@ mod tests {
         assert!(bst.contains(2));
         assert!(!bst.contains(3));
     }
-
-    fn it_insert_and_find() {
-        let data=vec![1,2,3,4,5,6,7,8,9,10,11,12];
-        let mut binary_search_tree=BinarySearchTree::new(0);
-        assert!(binary_search_tree.contains(0));
-        for input in data.iter() {
-            binary_search_tree.insert(input.clone());
-        }
-        assert!(!binary_search_tree.contains(13));
-        for input in data.iter() {
-            assert!(binary_search_tree.contains(input.clone()));
-        }
-    }
 }
