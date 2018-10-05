@@ -42,9 +42,10 @@ impl<T> Heap<T> where T : Ord + Clone {
 
     pub fn push(&mut self, data: T) {
         let mut vector=self.array.to_vec();
-        vector.push(data);
+        vector.push(data.clone());
 
         if vector.len() == 1 {
+            self.array=vector;
             return;
         }
         let mut curr_index = self.array.len()-1;
@@ -145,44 +146,166 @@ impl<T> Heap<T> where T : Ord + Clone {
 #[cfg(test)]
 mod tests {
     use super::Heap;
-    extern crate rand;
-    use self::rand::{thread_rng, RngCore};
 
     #[test]
-    fn it_works() {
+    fn it_contains_one_pushed_element() {
         let mut heap=Heap::create(Vec::new());
-        let mut pushed_seq=Vec::new();
-        for _ in 0..100 {
-            let data=thread_rng().next_u32() as u8;
-            heap.push(data.clone());
-            pushed_seq.push(data);
-        }
-        //pushed_seq.sort_by(|a,b| b.cmp(a));
-        pushed_seq.sort();
-        pushed_seq.reverse();
-        while !heap.is_empty(){
-            let top_value=*heap.top().unwrap();
-            let popped_value=heap.pop().unwrap();
-            assert_eq!(top_value, pushed_seq.pop().unwrap());
-            assert_eq!(top_value, popped_value);
-        }
+        heap.push(0);
+        assert!(heap.contains(&0));
+        assert!(!heap.contains(&1));
     }
 
     #[test]
-    fn merge(){
-        let mut heap=Heap::create(vec![1,3,5,7]);
-        let another=Heap::create(vec![2,4,6,8]);
-        let expected_seq=vec![1,2,3,4,5,6,7,8];
+    fn it_contains_two_pushed_element() {
+        let mut heap=Heap::create(Vec::new());
+        heap.push(0);
+        heap.push(1);
+        assert!(heap.contains(&0));
+        assert!(heap.contains(&1));
+        assert!(!heap.contains(&2));
+    }
+
+    #[test]
+    fn it_contains_three_pushed_element() {
+        let mut heap=Heap::create(Vec::new());
+        heap.push(0);
+        heap.push(1);
+        heap.push(2);
+        assert!(heap.contains(&0));
+        assert!(heap.contains(&1));
+        assert!(heap.contains(&2));
+        assert!(!heap.contains(&3));
+    }
+
+    #[test]
+    fn it_can_top_empty_heap() {
+        let heap: Heap<i32>=Heap::create(Vec::new());
+        assert!(heap.top()==None);
+    }
+
+    #[test]
+    fn it_can_top_one_pushed_element() {
+        let mut heap=Heap::create(Vec::new());
+        heap.push(0);
+        assert!(heap.top().unwrap().clone()==0);
+    }
+
+    #[test]
+    fn it_can_top_two_pushed_element() {
+        let mut heap=Heap::create(Vec::new());
+        heap.push(0);
+        heap.push(1);
+        assert!(heap.top().unwrap().clone()==0);
+    }
+
+    #[test]
+    fn it_can_top_three_pushed_element() {
+        let mut heap=Heap::create(Vec::new());
+        heap.push(0);
+        heap.push(1);
+        heap.push(2);
+        assert!(heap.top().unwrap().clone()==0);
+    }
+
+    #[test]
+    fn it_can_merge_zero_and_one_elements_heap(){
+        let mut heap=Heap::create(vec![]);
+        let another=Heap::create(vec![1]);
+        let expected_seq=vec![1];
         heap.merge(&another);
 
-        for i in 0 .. 8 {
+        for i in 0 .. expected_seq.len() {
             assert_eq!(heap.pop().unwrap(), expected_seq[i]);
         }
     }
 
     #[test]
-    fn heap_sort() {
-        let mut to_sort=vec![1,6,4,5,6,3,4,5,2];
+    fn it_can_merge_zero_and_two_elements_heap(){
+        let mut heap=Heap::create(vec![]);
+        let another=Heap::create(vec![1,3]);
+        let expected_seq=vec![1,3];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn it_can_merge_one_and_one_elements_heap(){
+        let mut heap=Heap::create(vec![2]);
+        let another=Heap::create(vec![2]);
+        let expected_seq=vec![2,2];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn it_can_merge_one_and_two_elements_heap(){
+        let mut heap=Heap::create(vec![2]);
+        let another=Heap::create(vec![1,3]);
+        let expected_seq=vec![1,2,3];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn it_can_merge_two_and_two_elements_heap(){
+        let mut heap=Heap::create(vec![2,6]);
+        let another=Heap::create(vec![1,7]);
+        let expected_seq=vec![1,2,6,7];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn it_can_merge_one_and_three_elements_heap(){
+        let mut heap=Heap::create(vec![2]);
+        let another=Heap::create(vec![1,3,4]);
+        let expected_seq=vec![1,2,3,4];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn it_can_merge_two_and_three_elements_heap(){
+        let mut heap=Heap::create(vec![2,8]);
+        let another=Heap::create(vec![1,3,4]);
+        let expected_seq=vec![1,2,3,4,8];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn it_can_merge_three_and_three_elements_heap(){
+        let mut heap=Heap::create(vec![2,4,8]);
+        let another=Heap::create(vec![1,3,5]);
+        let expected_seq=vec![1,2,3,4,5,8];
+        heap.merge(&another);
+
+        for i in 0 .. expected_seq.len() {
+            assert_eq!(heap.pop().unwrap(), expected_seq[i]);
+        }
+    }
+
+    #[test]
+    fn heap_sort_one_element() {
+        let mut to_sort=vec![1];
         let mut expected=to_sort.clone();
         expected.sort();
         let sorted=heap_sort!(to_sort);
@@ -190,23 +313,98 @@ mod tests {
     }
 
     #[test]
-    fn heap_remove() {
+    fn heap_sort_two_elements() {
+        let mut to_sort=vec![6,4];
+        let mut expected=to_sort.clone();
+        expected.sort();
+        let sorted=heap_sort!(to_sort);
+        assert_eq!(expected, sorted);
+    }
+    #[test]
+    fn heap_sort_three_elements() {
+        let mut to_sort=vec![1,6,4];
+        let mut expected=to_sort.clone();
+        expected.sort();
+        let sorted=heap_sort!(to_sort);
+        assert_eq!(expected, sorted);
+    }
+    #[test]
+    fn heap_sort_four_elements() {
+        let mut to_sort=vec![1,6,4,5];
+        let mut expected=to_sort.clone();
+        expected.sort();
+        let sorted=heap_sort!(to_sort);
+        assert_eq!(expected, sorted);
+    }
+    #[test]
+    fn heap_sort_five_elements() {
+        let mut to_sort=vec![1,6,4,5,6];
+        let mut expected=to_sort.clone();
+        expected.sort();
+        let sorted=heap_sort!(to_sort);
+        assert_eq!(expected, sorted);
+    }
+    #[test]
+    fn heap_sort_six_elements() {
+        let mut to_sort=vec![1,6,4,5,6,3];
+        let mut expected=to_sort.clone();
+        expected.sort();
+        let sorted=heap_sort!(to_sort);
+        assert_eq!(expected, sorted);
+    }
+
+    #[test]
+    fn heap_sort_seven_element() {
+        let mut to_sort=vec![1,6,4,5,6,3,4];
+        let mut expected=to_sort.clone();
+        expected.sort();
+        let sorted=heap_sort!(to_sort);
+        assert_eq!(expected, sorted);
+    }
+
+    #[test]
+    fn heap_remove_from_zero_elements() {
         let mut heap=Heap::create(vec![]);
-        assert_eq!(heap.contains(&3), heap.remove(3));
-        let mut heap=Heap::create(vec![1,6,4,5,6,3,4,5]);
-        assert_eq!(heap.contains(&3), heap.remove(3));
-        assert_eq!(heap.contains(&3), heap.remove(3));
-        assert_eq!(format!("{:?}", heap.array), "[1, 5, 4, 5, 6, 4, 6]");
-        let mut heap=Heap::create(vec![1,6,4,5,6,3]);
-        assert_eq!(heap.contains(&3), heap.remove(3));
-        assert_eq!(heap.contains(&3), heap.remove(3));
+        assert!(!heap.contains(&3));
+        assert!(!heap.remove(3));
+    }
 
+    #[test]
+    fn heap_remove_from_one_elements() {
+        let mut heap = Heap::create(vec![3]);
+        assert!(heap.contains(&3));
+        assert!(heap.remove(3));
+        assert!(!heap.contains(&3));
+    }
+
+    #[test]
+    fn heap_remove_from_two_elements() {
+        let mut heap = Heap::create(vec![1, 6]);
+        assert!(heap.contains(&6));
+        assert!(heap.remove(6));
+        assert!(!heap.contains(&6));
+        assert!(!heap.remove(6));
+    }
+
+
+
+    #[test]
+    fn heap_remove_from_three_elements() {
+        let mut heap=Heap::create(vec![1,6,4]);
+        assert!(heap.contains(&6));
+        assert!(heap.remove(6));
+        assert!(!heap.contains(&6));
+        assert!(!heap.remove(6));
+    }
+
+    #[test]
+    fn heap_remove_a_duplicate_element() {
         let mut heap=Heap::create(vec![1,6,4,5,6,3,3]);
-        assert_eq!(heap.contains(&3), heap.remove(3));
-        assert_eq!(heap.contains(&3), heap.remove(3));
-        assert_eq!(heap.contains(&3), heap.remove(3));
-
-        let mut heap=Heap::create(vec![1,6,4,5,8]);
-        assert_eq!(heap.contains(&5), heap.remove(5));
+        assert!(heap.contains(&6));
+        assert!(heap.remove(6));
+        assert!(heap.contains(&6));
+        assert!(heap.remove(6));
+        assert!(!heap.contains(&6));
+        assert!(!heap.remove(6));
     }
 }
