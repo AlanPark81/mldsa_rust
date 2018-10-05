@@ -15,7 +15,7 @@ pub struct ListIterator<T> {
     next_node:OptionLink<T>
 }
 
-impl<T> Iterator for ListIterator<T> where T : Clone {
+impl<T> Iterator for ListIterator<T> where T : Clone + Debug {
     type Item=T;
     fn next(&mut self) -> Option<Self::Item>{
         self.next_node.take().and_then(|next_node| {
@@ -114,6 +114,9 @@ impl<T> LinkedList<T> where T: Clone + Debug {
     }
 
     pub fn insert_after(&mut self, iterator:&ListIterator<T>, data:&T) -> Result<(), &str> {
+        if iterator.next_node.is_none() {
+            return Err("fail");
+        }
         let before=iterator.next_node.clone().unwrap();
         let node= Some(Rc::new(RefCell::new(Node {
             prev:Some(before.clone()),
@@ -121,21 +124,36 @@ impl<T> LinkedList<T> where T: Clone + Debug {
             data:data.clone()
         })));
 
-        let temp=(*before).borrow_mut().next.clone().unwrap();
-        (*temp).borrow_mut().prev=node.clone();
+        let next=(*before).borrow_mut().next.clone();
+        if next.is_some() {
+            let temp=next.clone().unwrap();
+            (*temp).borrow_mut().prev=node.clone();
+        }
+        else {
+            self.tail=node.clone();
+        }
         (*before).borrow_mut().next=node;
         self.size+=1;
         Ok(())
     }
     pub fn insert_before(&mut self, iterator:&ListIterator<T>, data:&T) -> Result<(), &str> {
+        if iterator.next_node.is_none() {
+            return Err("fail");
+        }
         let after=iterator.next_node.clone().unwrap();
         let node=Some(Rc::new(RefCell::new(Node {
             prev:after.borrow().prev.clone(),
             next:Some(after.clone()),
             data:data.clone()
         })));
-        let temp = (*after).borrow_mut().prev.clone().unwrap();
-        (*temp).borrow_mut().next=node.clone();
+
+        let prev=(*after).borrow_mut().prev.clone();
+        if prev.is_some() {
+            let temp = prev.clone().unwrap();
+            (*temp).borrow_mut().next=node.clone();
+        } else {
+            self.head=node.clone();
+        }
         (*after).borrow_mut().prev=node;
         self.size+=1;
         Ok(())
@@ -667,5 +685,316 @@ mod tests{
         assert_eq!(list.front().unwrap(),2);
         assert_eq!(list.count_front(),list.count_back());
         assert_eq!(list.count_front(),5);
+    }
+
+    #[test]
+    fn it_inserts_back_once_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        for val in list.iter(){
+            assert_eq!(val,1);
+        }
+    }
+
+    #[test]
+    fn it_inserts_back_twice_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let mut expected_seq=vec![1,2];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_back_three_times_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        let mut expected_seq=vec![1,2,3];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_to_empty_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        let mut expected_seq=vec![1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_empty_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        list.insert_front(&2);
+        let mut expected_seq=vec![2,1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_to_one_length_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&13);
+        let mut expected_seq=vec![13, 1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_one_length_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        let mut expected_seq=vec![2, 1, 1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_to_two_length_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&13);
+        let mut expected_seq=vec![13, 1, 2];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_two_length_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        let mut expected_seq=vec![2, 1, 1, 2];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_to_three_length_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&13);
+        let mut expected_seq=vec![13, 1, 2, 3];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_three_length_list_iteration() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        let mut expected_seq=vec![2, 1, 1, 2, 3];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_after_to_empty_list() {
+        let mut list=LinkedList::new();
+        let iter=list.iter();
+        assert!(list.insert_after(&iter, &1).is_err());
+        assert!(list.is_empty());
+    }
+
+    #[test]
+    fn it_insert_after_to_one_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        let iter=list.iter();
+        list.insert_after(&iter, &2);
+        let mut expected_seq=vec![1, 2];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_after_to_end_of_one_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        let mut iter=list.iter();
+        iter.next();
+        list.insert_after(&iter, &2);
+        let mut expected_seq=vec![1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_before_to_one_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        let iter=list.iter();
+        list.insert_before(&iter, &2);
+        let mut expected_seq=vec![2, 1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_before_to_end_of_one_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+
+        let mut iter=list.iter();
+        iter.next();
+        list.insert_before(&iter, &2);
+
+        let mut expected_seq=vec![1];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_after_to_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let iter = list.iter();
+        list.insert_after(&iter, &3);
+        let mut expected_seq=vec![1, 3, 2];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_before_to_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let iter = list.iter();
+        list.insert_before(&iter, &3);
+        let mut expected_seq=vec![3, 1, 2];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_after_to_middle_of_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let mut iter = list.iter();
+        iter.next();
+        list.insert_after(&iter, &3);
+        let mut expected_seq=vec![1, 2, 3];
+        assert_eq!(list.size(), expected_seq.len());
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_before_to_middle_of_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let mut iter = list.iter();
+        iter.next();
+        list.insert_before(&iter, &3);
+        let mut expected_seq=vec![1, 3, 2];
+        assert_eq!(list.size(), expected_seq.len());
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_after_to_end_of_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let mut iter = list.iter();
+        iter.next();
+        iter.next();
+        list.insert_after(&iter, &3);
+        let mut expected_seq=vec![1, 2];
+        assert_eq!(list.size(), expected_seq.len());
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_before_to_end_of_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        let mut iter = list.iter();
+        iter.next();
+        iter.next();
+        list.insert_before(&iter, &3);
+        let mut expected_seq=vec![1, 2];
+        assert_eq!(list.size(), expected_seq.len());
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
+    }
+
+    #[test]
+    fn it_insert_after_to_three_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        let iter = list.iter();
+        list.insert_after(&iter, &4);
+        let mut expected_seq=vec![1, 4, 2, 3];
+        for val in list.iter() {
+            assert_eq!(val, expected_seq.first().unwrap().clone());
+            expected_seq.remove(0);
+        }
     }
 }

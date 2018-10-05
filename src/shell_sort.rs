@@ -28,8 +28,76 @@ mod tests {
     extern crate rand;
     use self::rand::{ thread_rng, RngCore };
     #[test]
-    fn shell_sort_test() {
-        const COUNT:usize=100;
+    fn shell_sort_one() {
+        const COUNT:usize=1;
+        let mut array=[0u32;COUNT];
+        let mut vec=Vec::with_capacity(COUNT);
+        for i in 0..COUNT {
+            array[i]=thread_rng().next_u32();
+            vec.push(array[i].clone());
+        }
+        vec.sort();
+
+        shell_sort(&mut array);
+        for i in 0..COUNT {
+            assert_eq!(array[i], vec[i]);
+        }
+    }
+
+    #[test]
+    fn shell_sort_two() {
+        const COUNT:usize=2;
+        let mut array=[0u32;COUNT];
+        let mut vec=Vec::with_capacity(COUNT);
+        for i in 0..COUNT {
+            array[i]=thread_rng().next_u32();
+            vec.push(array[i].clone());
+        }
+        vec.sort();
+
+        shell_sort(&mut array);
+        for i in 0..COUNT {
+            assert_eq!(array[i], vec[i]);
+        }
+    }
+
+    #[test]
+    fn shell_sort_three() {
+        const COUNT:usize=3;
+        let mut array=[0u32;COUNT];
+        let mut vec=Vec::with_capacity(COUNT);
+        for i in 0..COUNT {
+            array[i]=thread_rng().next_u32();
+            vec.push(array[i].clone());
+        }
+        vec.sort();
+
+        shell_sort(&mut array);
+        for i in 0..COUNT {
+            assert_eq!(array[i], vec[i]);
+        }
+    }
+
+    #[test]
+    fn shell_sort_four() {
+        const COUNT:usize=4;
+        let mut array=[0u32;COUNT];
+        let mut vec=Vec::with_capacity(COUNT);
+        for i in 0..COUNT {
+            array[i]=thread_rng().next_u32();
+            vec.push(array[i].clone());
+        }
+        vec.sort();
+
+        shell_sort(&mut array);
+        for i in 0..COUNT {
+            assert_eq!(array[i], vec[i]);
+        }
+    }
+
+    #[test]
+    fn shell_sort_five() {
+        const COUNT:usize=5;
         let mut array=[0u32;COUNT];
         let mut vec=Vec::with_capacity(COUNT);
         for i in 0..COUNT {

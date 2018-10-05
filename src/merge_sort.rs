@@ -36,7 +36,77 @@ fn merge_sort<T>(list:&mut LinkedList<T>) where T : Ord + Debug + Clone{
 mod tests {
     use super::*;
     #[test]
-    fn test1() {
+    fn one_item_list() {
+        let mut list = LinkedList::new();
+        list.push_front(1);
+        merge_sort(&mut list);
+        let mut before_val=0;
+        while !list.is_empty() {
+            let curr_val=list.pop_front().unwrap_or(-1);
+            if list.is_empty() {
+                break;
+            }
+            assert!(before_val<curr_val);
+            before_val=curr_val;
+        }
+    }
+
+    #[test]
+    fn two_item_list() {
+        let mut list = LinkedList::new();
+        list.push_front(1);
+        list.push_front(2);
+        merge_sort(&mut list);
+        let mut before_val=0;
+        while !list.is_empty() {
+            let curr_val=list.pop_front().unwrap_or(-1);
+            if list.is_empty() {
+                break;
+            }
+            assert!(before_val<curr_val);
+            before_val=curr_val;
+        }
+    }
+
+    #[test]
+    fn three_item_list() {
+        let mut list = LinkedList::new();
+        list.push_front(1);
+        list.push_front(2);
+        list.push_front(3);
+        merge_sort(&mut list);
+        let mut before_val=0;
+        while !list.is_empty() {
+            let curr_val=list.pop_front().unwrap_or(-1);
+            if list.is_empty() {
+                break;
+            }
+            assert!(before_val<curr_val);
+            before_val=curr_val;
+        }
+    }
+
+    #[test]
+    fn four_item_list() {
+        let mut list = LinkedList::new();
+        list.push_front(1);
+        list.push_front(2);
+        list.push_front(3);
+        list.push_front(4);
+        merge_sort(&mut list);
+        let mut before_val=0;
+        while !list.is_empty() {
+            let curr_val=list.pop_front().unwrap_or(-1);
+            if list.is_empty() {
+                break;
+            }
+            assert!(before_val<curr_val);
+            before_val=curr_val;
+        }
+    }
+
+    #[test]
+    fn five_item_list() {
         let mut list = LinkedList::new();
         list.push_front(1);
         list.push_front(2);

@@ -50,12 +50,12 @@ mod tests {
     use self::rand::random;
     use super::*;
     #[test]
-    fn quicksort_sort() {
-        let mut array=[0;100];
+    fn quicksort_one() {
+        let mut array=[0;1];
         for i in 0..array.len() {
             array[i]=random();
         }
-        let mut array_sorted=[0i32;100];
+        let mut array_sorted=[0i32;1];
         array_sorted.clone_from_slice(&array);
         array_sorted.sort();
         quicksort(&mut array);
@@ -66,6 +66,81 @@ mod tests {
             }
             assert_eq!(array[i], array_sorted[i]);
         }
+    }
 
+    #[test]
+    fn quicksort_two() {
+        let mut array=[0;2];
+        for i in 0..array.len() {
+            array[i]=random();
+        }
+        let mut array_sorted=[0i32;2];
+        array_sorted.clone_from_slice(&array);
+        array_sorted.sort();
+        quicksort(&mut array);
+
+        for i in 0..array.len() {
+            if i>=1 {
+                assert!(array[i]>array[i-1]);
+            }
+            assert_eq!(array[i], array_sorted[i]);
+        }
+    }
+
+    #[test]
+    fn quicksort_three() {
+        let mut array=[0;3];
+        for i in 0..array.len() {
+            array[i]=random();
+        }
+        let mut array_sorted=[0i32;3];
+        array_sorted.clone_from_slice(&array);
+        array_sorted.sort();
+        quicksort(&mut array);
+
+        for i in 0..array.len() {
+            if i>=1 {
+                assert!(array[i]>array[i-1]);
+            }
+            assert_eq!(array[i], array_sorted[i]);
+        }
+    }
+
+    #[test]
+    fn quicksort_four() {
+        let mut array=[0;4];
+        for i in 0..array.len() {
+            array[i]=random();
+        }
+        let mut array_sorted=[0i32;4];
+        array_sorted.clone_from_slice(&array);
+        array_sorted.sort();
+        quicksort(&mut array);
+
+        for i in 0..array.len() {
+            if i>=1 {
+                assert!(array[i]>array[i-1]);
+            }
+            assert_eq!(array[i], array_sorted[i]);
+        }
+    }
+
+    #[test]
+    fn quicksort_five() {
+        let mut array=[0;5];
+        for i in 0..array.len() {
+            array[i]=random();
+        }
+        let mut array_sorted=[0i32;5];
+        array_sorted.clone_from_slice(&array);
+        array_sorted.sort();
+        quicksort(&mut array);
+
+        for i in 0..array.len() {
+            if i>=1 {
+                assert!(array[i]>array[i-1]);
+            }
+            assert_eq!(array[i], array_sorted[i]);
+        }
     }
 }
