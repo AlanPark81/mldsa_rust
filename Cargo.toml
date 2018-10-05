@@ -1,0 +1,8 @@
+[package]
+name = "mldsa_rust"
+version = "0.1.0"
+authors = ["Alan Park <alanpark@glosfer.com>"]
+
+[dependencies]
+blake2-rfc = "0.2.18"
+rand = "0.5"
