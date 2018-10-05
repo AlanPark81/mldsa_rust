@@ -74,45 +74,41 @@ impl<T> LinkedList<T> where T: Clone + Debug {
     }
 
     pub fn insert_back(&mut self, data:&T) {
-        let temp=self.tail.take();
-        self.tail=Some(Rc::new(
-            RefCell::new(Node{
-                prev: None,
-                next: None,
-                data: data.clone()}
-            )
-        )
-        );
-
         if self.is_empty() {
+            self.tail=Some( Rc::new(RefCell::new(Node {
+                data: data.clone(),
+                next: None,
+                prev: None
+            }) ) );
             self.head=self.tail.clone();
         } else {
-            let temp_tail=self.tail.clone().unwrap();
-            (*temp_tail).borrow_mut().prev=temp.clone();
-            let temp1=temp.unwrap();
-            (*temp1).borrow_mut().next =self.tail.clone();
+            let mut tail = self.tail.take();
+            self.tail = Some( Rc::new(RefCell::new(Node {
+                data: data.clone(),
+                next: None,
+                prev: tail.clone(),
+            }) ) );
+            tail.as_mut().and_then(|link| { link.borrow_mut().next=self.tail.clone(); Some(link.clone())} );
         }
         self.size+=1;
     }
 
     pub fn insert_front(&mut self, data:&T) {
-        let temp=self.head.take();
-        self.head=Some(Rc::new(
-            RefCell::new(Node{
-                prev: None,
-                next: None,
-                data: data.clone()}
-            )
-        )
-        );
-
         if self.is_empty() {
+            self.head=Some( Rc::new(RefCell::new(Node {
+                data: data.clone(),
+                next: None,
+                prev: None
+            }) ) );
             self.tail=self.head.clone();
         } else {
-            let temp_tail=self.head.clone().unwrap();
-            (*temp_tail).borrow_mut().next=temp.clone();
-            let temp1=temp.unwrap();
-            (*temp1).borrow_mut().prev =self.head.clone();
+            let mut head = self.head.take();
+            self.head = Some( Rc::new(RefCell::new(Node {
+                data: data.clone(),
+                next: head.clone(),
+                prev: None
+            }) ) );
+            head.as_mut().and_then(|link| { link.borrow_mut().prev=self.head.clone(); Some(link.clone())} );
         }
         self.size+=1;
     }
@@ -146,9 +142,35 @@ impl<T> LinkedList<T> where T: Clone + Debug {
     }
 
     pub fn pop_front(&mut self) -> Option<T> {
+        if self.size == 1 {
+            let ret_val=self.head.as_ref().and_then(|link| Some(link.borrow().data.clone())).or(None);
+            self.head=None;
+            self.tail=None;
+            return ret_val;
+        }
         self.head.take().and_then( |value| {
             self.head =value.borrow().next.clone();
             self.size-=1;
+            if self.size==1 {
+                self.tail=self.head.clone();
+            }
+            return Some(value.borrow().data.clone())
+        } ).or(None)
+    }
+
+    pub fn pop_back(&mut self) -> Option<T> {
+        if self.size == 1 {
+            let ret_val=self.head.as_ref().and_then(|link| Some(link.borrow().data.clone())).or(None);
+            self.head=None;
+            self.tail=None;
+            return ret_val;
+        }
+        self.tail.take().and_then( |value| {
+            self.tail=value.borrow().prev.clone();
+            self.size-=1;
+            if self.size==1 {
+                self.head=self.tail.clone();
+            }
             return Some(value.borrow().data.clone())
         } ).or(None)
     }
@@ -166,27 +188,484 @@ impl<T> LinkedList<T> where T: Clone + Debug {
 mod tests{
     use super::LinkedList;
     #[test]
-    fn it_test_linked_list() {
+    fn it_inserts_back_once() {
         let mut list=LinkedList::new();
-        for i in 0..100 {
-            list.insert_back(&i);
-        }
-        for i in 0..100 {
-            list.insert_front(&i);
-        }
-        let mut iterator=list.iter();
-        iterator.next();
-        iterator.next();
-        iterator.next();
-        if list.insert_after(&iterator,&318).is_err(){
-            panic!("insert_after fail");
-        }
-        if list.insert_before(&iterator, &31818).is_err() {
-            panic!("insert before fail")
-        }
+        list.insert_back(&1);
+        assert_eq!(list.back().unwrap(),1);
+    }
 
-        assert_eq!(list.count_back(), list.count_front());
-        assert_eq!(list.front().unwrap(), 99);
-        assert_eq!(list.back().unwrap(), 99);
+    #[test]
+    fn it_inserts_back_twice() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        assert_eq!(list.back().unwrap(),2);
+    }
+
+    #[test]
+    fn it_inserts_back_three_times() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        assert_eq!(list.back().unwrap(),3);
+    }
+
+    #[test]
+    fn it_inserts_front_to_empty_list() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        assert_eq!(list.front().unwrap(),1);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_empty_list() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+    }
+
+    #[test]
+    fn it_inserts_front_to_one_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&13);
+        assert_eq!(list.front().unwrap(),13);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_one_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+    }
+
+    #[test]
+    fn it_inserts_front_to_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&13);
+        assert_eq!(list.front().unwrap(),13);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_two_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+    }
+
+    #[test]
+    fn it_inserts_front_to_three_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&13);
+        assert_eq!(list.front().unwrap(),13);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_three_length_list() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+    }
+
+    #[test]
+    fn it_inserts_back_once_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        assert_eq!(list.pop_front().unwrap(), 1);
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_back_twice_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        assert_eq!(list.pop_front().unwrap(),1);
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_back_three_times_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        assert_eq!(list.pop_front().unwrap(),1);
+        list.pop_front();
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_empty_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        assert_eq!(list.pop_front().unwrap(),1);
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_empty_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_front().unwrap(),2);
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_one_length_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&13);
+        assert_eq!(list.pop_front().unwrap(),13);
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_one_length_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_front().unwrap(),2);
+        list.pop_front();
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_two_length_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&13);
+        assert_eq!(list.pop_front().unwrap(),13);
+        list.pop_front();
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_two_length_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_front().unwrap(),2);
+        list.pop_front();
+        list.pop_front();
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_three_length_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&13);
+        assert_eq!(list.pop_front().unwrap(),13);
+        list.pop_front();
+        list.pop_front();
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_three_length_list_and_pop_front() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_front().unwrap(),2);
+        list.pop_front();
+        list.pop_front();
+        list.pop_front();
+        list.pop_front();
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_back_once_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        assert_eq!(list.pop_back().unwrap(), 1);
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_back_twice_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        assert_eq!(list.pop_back().unwrap(),2);
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_back_three_times_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        assert_eq!(list.pop_back().unwrap(),3);
+        list.pop_back();
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_empty_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        assert_eq!(list.pop_back().unwrap(),1);
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_empty_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_back().unwrap(),1);
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_one_length_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&13);
+        assert_eq!(list.pop_back().unwrap(),1);
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_one_length_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_back().unwrap(),1);
+        list.pop_back();
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_two_length_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&13);
+        assert_eq!(list.pop_back().unwrap(),2);
+        list.pop_back();
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_two_length_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_back().unwrap(),2);
+        list.pop_back();
+        list.pop_back();
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_to_three_length_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&13);
+        assert_eq!(list.pop_back().unwrap(),3);
+        list.pop_back();
+        list.pop_back();
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_three_length_list_and_pop_back() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_back().unwrap(),3);
+        list.pop_back();
+        list.pop_back();
+        list.pop_back();
+        list.pop_back();
+        assert_eq!(list.pop_back(), None);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_three_length_list_and_pop_back_and_forth() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.pop_back().unwrap(),3);
+        assert_eq!(list.pop_front().unwrap(),2);
+        assert_eq!(list.pop_back().unwrap(),2);
+        assert_eq!(list.pop_front().unwrap(),1);
+        assert_eq!(list.pop_back().unwrap(),1);
+        assert_eq!(list.pop_back(), None);
+        assert_eq!(list.pop_front(), None);
+    }
+
+    #[test]
+    fn it_inserts_back_once_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        assert_eq!(list.back().unwrap(),1);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),1);
+    }
+
+    #[test]
+    fn it_inserts_back_twice_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        assert_eq!(list.back().unwrap(),2);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),2);
+    }
+
+    #[test]
+    fn it_inserts_back_three_times_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        assert_eq!(list.back().unwrap(),3);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),3);
+    }
+
+    #[test]
+    fn it_inserts_front_to_empty_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        assert_eq!(list.front().unwrap(),1);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),1);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_empty_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),2);
+    }
+
+    #[test]
+    fn it_inserts_front_to_one_length_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&13);
+        assert_eq!(list.front().unwrap(),13);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),2);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_one_length_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),3);
+    }
+
+    #[test]
+    fn it_inserts_front_to_two_length_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&13);
+        assert_eq!(list.front().unwrap(),13);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),3);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_two_length_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+        assert_eq!(list.count_front(),4);
+    }
+
+    #[test]
+    fn it_inserts_front_to_three_length_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&13);
+        assert_eq!(list.front().unwrap(),13);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),4);
+    }
+
+    #[test]
+    fn it_inserts_front_twice_to_three_length_list_and_count() {
+        let mut list=LinkedList::new();
+        list.insert_back(&1);
+        list.insert_back(&2);
+        list.insert_back(&3);
+        list.insert_front(&1);
+        list.insert_front(&2);
+        assert_eq!(list.front().unwrap(),2);
+        assert_eq!(list.count_front(),list.count_back());
+        assert_eq!(list.count_front(),5);
     }
 }
