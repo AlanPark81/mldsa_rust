@@ -1,7 +1,8 @@
-struct Heap< T> {
+pub struct Heap< T> {
     array:Vec<T>
 }
 
+#[macro_export]
 macro_rules! heap_sort{
     ($values:expr) => {{
         for i in 0..$values.len() {

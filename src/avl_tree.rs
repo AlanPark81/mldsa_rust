@@ -118,7 +118,7 @@ impl<T> AVLTree<T> where T : Ord + Clone + Debug {
         self.root.as_ref().and_then(|tree| Some( tree.contains( data ) ) ).unwrap_or(false)
     }
 
-    fn level_diff(&self) -> i32 {
+    pub fn level_diff(&self) -> i32 {
         self.root.as_ref().and_then(|tree| Some( tree.level_diff() ) ).unwrap_or(0)
     }
 }

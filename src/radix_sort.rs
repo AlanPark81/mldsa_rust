@@ -1,6 +1,5 @@
-use std::fmt::Debug;
 use std::vec::Vec;
-use std::u64::MAX;
+
 pub fn radix_sort(array:&mut Vec<u64>){
     let mut radix_queue = Vec::new();
     for _ in 0..10 {
@@ -20,7 +19,6 @@ pub fn radix_sort(array:&mut Vec<u64>){
             vector.append(&mut vec);
         }
         *array = vector;
-        println!("{} {:?}", index,  array);
         index*=10;
     }
 }

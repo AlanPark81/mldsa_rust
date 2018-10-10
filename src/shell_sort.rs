@@ -1,4 +1,4 @@
-fn shell_sort<T>(array: &mut [T]) where T : Ord + Clone {
+pub fn shell_sort<T>(array: &mut [T]) where T : Ord + Clone {
     let mut gaps=vec![701, 301, 132, 57, 23, 10, 4, 1];
     let array_len=array.len();
     for i in 0..gaps.len() {

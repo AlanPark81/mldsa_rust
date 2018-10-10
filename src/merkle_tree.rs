@@ -38,6 +38,7 @@ macro_rules! create_next_level {
 }
 
 /// Construct a merkle tree of given the hash value vector and return the root value
+#[macro_export]
 macro_rules! calculate_merkle_root {
     ($hash_for_two:expr, $hashes:expr) => {{
         MerkleTree::create($hash_for_two, $hashes).root()

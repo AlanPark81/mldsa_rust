@@ -8,7 +8,7 @@ macro_rules! compare_swap {
     }}
 }
 
-fn quicksort<T>(array:&mut [T]) where T : Clone + Copy + Ord + Debug{
+pub fn quick_sort<T>(array:&mut [T]) where T : Clone + Copy + Ord + Debug{
     if array.len()<=1 {
         return;
     }
@@ -39,8 +39,8 @@ fn quicksort<T>(array:&mut [T]) where T : Clone + Copy + Ord + Debug{
         }
         array.swap(less_first, bigger_first);
     }
-    quicksort(&mut array[0..pivot_index]);
-    quicksort(&mut array[pivot_index+1..]);
+    quick_sort(&mut array[0..pivot_index]);
+    quick_sort(&mut array[pivot_index+1..]);
 }
 
 
@@ -50,7 +50,7 @@ mod tests {
     use self::rand::random;
     use super::*;
     #[test]
-    fn quicksort_one() {
+    fn quick_sort_one() {
         let mut array=[0;1];
         for i in 0..array.len() {
             array[i]=random();
@@ -58,7 +58,7 @@ mod tests {
         let mut array_sorted=[0i32;1];
         array_sorted.clone_from_slice(&array);
         array_sorted.sort();
-        quicksort(&mut array);
+        quick_sort(&mut array);
 
         for i in 0..array.len() {
             if i>=1 {
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn quicksort_two() {
+    fn quick_sort_two() {
         let mut array=[0;2];
         for i in 0..array.len() {
             array[i]=random();
@@ -77,7 +77,7 @@ mod tests {
         let mut array_sorted=[0i32;2];
         array_sorted.clone_from_slice(&array);
         array_sorted.sort();
-        quicksort(&mut array);
+        quick_sort(&mut array);
 
         for i in 0..array.len() {
             if i>=1 {
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn quicksort_three() {
+    fn quick_sort_three() {
         let mut array=[0;3];
         for i in 0..array.len() {
             array[i]=random();
@@ -96,7 +96,7 @@ mod tests {
         let mut array_sorted=[0i32;3];
         array_sorted.clone_from_slice(&array);
         array_sorted.sort();
-        quicksort(&mut array);
+        quick_sort(&mut array);
 
         for i in 0..array.len() {
             if i>=1 {
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn quicksort_four() {
+    fn quick_sort_four() {
         let mut array=[0;4];
         for i in 0..array.len() {
             array[i]=random();
@@ -115,7 +115,7 @@ mod tests {
         let mut array_sorted=[0i32;4];
         array_sorted.clone_from_slice(&array);
         array_sorted.sort();
-        quicksort(&mut array);
+        quick_sort(&mut array);
 
         for i in 0..array.len() {
             if i>=1 {
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn quicksort_five() {
+    fn quick_sort_five() {
         let mut array=[0;5];
         for i in 0..array.len() {
             array[i]=random();
@@ -134,7 +134,7 @@ mod tests {
         let mut array_sorted=[0i32;5];
         array_sorted.clone_from_slice(&array);
         array_sorted.sort();
-        quicksort(&mut array);
+        quick_sort(&mut array);
 
         for i in 0..array.len() {
             if i>=1 {

@@ -1,6 +1,6 @@
 use std::boxed::Box;
 
-struct BinarySearchTree<T> {
+pub struct BinarySearchTree<T> {
     left: Option< Box< BinarySearchTree<T> > >,
     right: Option< Box< BinarySearchTree<T> > >,
     data: T

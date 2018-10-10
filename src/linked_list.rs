@@ -838,7 +838,7 @@ mod tests{
         let mut list=LinkedList::new();
         list.insert_back(&1);
         let iter=list.iter();
-        list.insert_after(&iter, &2);
+        list.insert_after(&iter, &2).expect("fail to insert_after");
         let mut expected_seq=vec![1, 2];
         for val in list.iter() {
             assert_eq!(val, expected_seq.first().unwrap().clone());
@@ -852,7 +852,7 @@ mod tests{
         list.insert_back(&1);
         let mut iter=list.iter();
         iter.next();
-        list.insert_after(&iter, &2);
+        list.insert_after(&iter, &2).expect_err("fail to insert_after");
         let mut expected_seq=vec![1];
         for val in list.iter() {
             assert_eq!(val, expected_seq.first().unwrap().clone());
@@ -865,7 +865,7 @@ mod tests{
         let mut list=LinkedList::new();
         list.insert_back(&1);
         let iter=list.iter();
-        list.insert_before(&iter, &2);
+        list.insert_before(&iter, &2).expect("fail to insert_after");
         let mut expected_seq=vec![2, 1];
         for val in list.iter() {
             assert_eq!(val, expected_seq.first().unwrap().clone());
@@ -880,7 +880,7 @@ mod tests{
 
         let mut iter=list.iter();
         iter.next();
-        list.insert_before(&iter, &2);
+        list.insert_before(&iter, &2).expect_err("fail to insert_after");
 
         let mut expected_seq=vec![1];
         for val in list.iter() {
@@ -895,7 +895,7 @@ mod tests{
         list.insert_back(&1);
         list.insert_back(&2);
         let iter = list.iter();
-        list.insert_after(&iter, &3);
+        list.insert_after(&iter, &3).expect("fail to insert_after");
         let mut expected_seq=vec![1, 3, 2];
         for val in list.iter() {
             assert_eq!(val, expected_seq.first().unwrap().clone());
@@ -909,7 +909,7 @@ mod tests{
         list.insert_back(&1);
         list.insert_back(&2);
         let iter = list.iter();
-        list.insert_before(&iter, &3);
+        list.insert_before(&iter, &3).expect("fail to insert_after");
         let mut expected_seq=vec![3, 1, 2];
         for val in list.iter() {
             assert_eq!(val, expected_seq.first().unwrap().clone());
@@ -924,7 +924,7 @@ mod tests{
         list.insert_back(&2);
         let mut iter = list.iter();
         iter.next();
-        list.insert_after(&iter, &3);
+        list.insert_after(&iter, &3).expect("fail to insert_after");
         let mut expected_seq=vec![1, 2, 3];
         assert_eq!(list.size(), expected_seq.len());
         for val in list.iter() {
@@ -940,7 +940,7 @@ mod tests{
         list.insert_back(&2);
         let mut iter = list.iter();
         iter.next();
-        list.insert_before(&iter, &3);
+        list.insert_before(&iter, &3).expect("fail to insert_after");
         let mut expected_seq=vec![1, 3, 2];
         assert_eq!(list.size(), expected_seq.len());
         for val in list.iter() {
@@ -957,7 +957,7 @@ mod tests{
         let mut iter = list.iter();
         iter.next();
         iter.next();
-        list.insert_after(&iter, &3);
+        list.insert_after(&iter, &3).expect_err("fail to insert_after");
         let mut expected_seq=vec![1, 2];
         assert_eq!(list.size(), expected_seq.len());
         for val in list.iter() {
@@ -974,7 +974,7 @@ mod tests{
         let mut iter = list.iter();
         iter.next();
         iter.next();
-        list.insert_before(&iter, &3);
+        list.insert_before(&iter, &3).expect_err("fail to insert_after");
         let mut expected_seq=vec![1, 2];
         assert_eq!(list.size(), expected_seq.len());
         for val in list.iter() {
@@ -990,7 +990,7 @@ mod tests{
         list.insert_back(&2);
         list.insert_back(&3);
         let iter = list.iter();
-        list.insert_after(&iter, &4);
+        list.insert_after(&iter, &4).expect("fail to insert_after");
         let mut expected_seq=vec![1, 4, 2, 3];
         for val in list.iter() {
             assert_eq!(val, expected_seq.first().unwrap().clone());

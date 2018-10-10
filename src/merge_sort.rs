@@ -2,7 +2,7 @@ use std::collections::LinkedList;
 use std::fmt::Debug;
 use std::clone::Clone;
 
-fn merge_sort<T>(list:&mut LinkedList<T>) where T : Ord + Debug + Clone{
+pub fn merge_sort<T>(list:&mut LinkedList<T>) where T : Ord + Debug + Clone{
     let list_len=list.len();
     if list_len == 1 { return;}
     let mut cloned_list=list.clone();
