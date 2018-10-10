@@ -1,44 +1,54 @@
 use std::boxed::Box;
 
-pub struct BinarySearchTree<T> {
+struct Node<T> {
     left: Option< Box< BinarySearchTree<T> > >,
     right: Option< Box< BinarySearchTree<T> > >,
     data: T
 }
 
+pub struct BinarySearchTree<T> {
+    root:Option< Box< Node<T> > >
+}
+
 impl<T> BinarySearchTree<T> where T : Clone + Ord {
-    pub fn new(data: &T) ->BinarySearchTree<T> {
+    pub fn new() ->BinarySearchTree<T> {
         BinarySearchTree{
-            left:None,
-            right:None,
-            data:data.clone()
+            root:None
+        }
+    }
+
+    pub fn create(data: &T) ->BinarySearchTree<T> {
+        BinarySearchTree{
+            root:Some(Box::new(Node{left: None, right: None, data: data.clone()}))
         }
     }
 
     pub fn contains(&self, data: &T) -> bool {
-        if *data==self.data{
+        if self.root.is_none() {return false}
+        if *data==self.root.as_ref().unwrap().data{
             return true;
-        } else if *data < self.data {
-            return self.left.as_ref().and_then(|tree| { Some(tree.contains(data))}).unwrap_or(false);
+        } else if *data < self.root.as_ref().unwrap().data {
+            return self.root.as_ref().unwrap().left.as_ref().and_then(|tree| { Some(tree.contains(data))}).unwrap_or(false);
         } else {
-            return self.right.as_ref().and_then(|tree| { Some(tree.contains(data))}).unwrap_or(false);
+            return self.root.as_ref().unwrap().right.as_ref().and_then(|tree| { Some(tree.contains(data))}).unwrap_or(false);
         }
     }
 
     pub fn insert(&mut self, data: &T) {
-        if *data==self.data{
+
+        if *data==self.root.as_ref().unwrap().data{
             return
         }
-        if *data<self.data {
-            let left=self.left.take();
-            self.left = left.and_then(
+        if *data<self.root.as_ref().unwrap().data {
+            let left=self.root.as_mut().unwrap().left.take();
+            self.root.as_mut().unwrap().left = left.and_then(
                 |mut tree| { tree.insert( data ); Some(tree)})
-                .or(Some( Box::new( BinarySearchTree::new( data ) ) ) );
+                .or(Some( Box::new( BinarySearchTree::create( data ) ) ) );
         } else {
-            let right=self.right.take();
-            self.right = right.and_then(
+            let right=self.root.as_mut().unwrap().right.take();
+            self.root.as_mut().unwrap().right = right.and_then(
                 |mut tree| { tree.insert( data ); Some(tree)})
-                .or(Some( Box::new( BinarySearchTree::new( data ) ) ) );
+                .or(Some( Box::new( BinarySearchTree::create( data ) ) ) );
         }
     }
 }
@@ -48,13 +58,13 @@ mod tests {
     use super::*;
     #[test]
     fn it_contains_one_element_inserted() {
-        let bst=BinarySearchTree::new(&0);
+        let bst=BinarySearchTree::create(&0);
         assert!(bst.contains(&0));
     }
 
     #[test]
     fn it_contains_two_element_inserted() {
-        let mut bst=BinarySearchTree::new(&0);
+        let mut bst=BinarySearchTree::create(&0);
         bst.insert(&1);
         assert!(bst.contains(&0));
         assert!(bst.contains(&1));
@@ -62,7 +72,7 @@ mod tests {
 
     #[test]
     fn it_contains_three_element_inserted() {
-        let mut bst=BinarySearchTree::new(&0);
+        let mut bst=BinarySearchTree::create(&0);
         bst.insert(&1);
         bst.insert(&2);
         assert!(bst.contains(&0));
@@ -72,14 +82,14 @@ mod tests {
 
     #[test]
     fn it_contain_no_not_inserted_element_one_element_inserted() {
-        let bst=BinarySearchTree::new(&0);
+        let bst=BinarySearchTree::create(&0);
         assert!(bst.contains(&0));
         assert!(!bst.contains(&13));
     }
 
     #[test]
     fn it_contain_no_not_inserted_element_two_element_inserted() {
-        let mut bst=BinarySearchTree::new(&0);
+        let mut bst=BinarySearchTree::create(&0);
         bst.insert(&1);
         assert!(bst.contains(&0));
         assert!(bst.contains(&1));
@@ -88,7 +98,7 @@ mod tests {
 
     #[test]
     fn it_contain_no_not_inserted_element_three_element_inserted() {
-        let mut bst=BinarySearchTree::new(&0);
+        let mut bst=BinarySearchTree::create(&0);
         bst.insert(&1);
         bst.insert(&2);
         assert!(bst.contains(&0));
