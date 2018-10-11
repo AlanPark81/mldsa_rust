@@ -95,7 +95,7 @@ impl<HashValueType> MerkleTree<HashValueType> where HashValueType : Clone {
     /// # Example
     ///
     /// ```
-    /// use mldsa_rust::merkle_tree;
+    /// use mldsa_rust::data_structures::merkle_tree;
     /// fn hash_for_two_hashes(a:&Vec<u8>, b:&Vec<u8>) -> Vec<u8> {a.clone()}
     /// let mut input = Vec::new();
     /// let hash_value=vec![0u8];
