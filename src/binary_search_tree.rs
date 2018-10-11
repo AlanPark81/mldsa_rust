@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn it_contain_no_removed_element_one_element_inserted() {
+    fn it_removes_only_one_element() {
         let mut bst=BinarySearchTree::new();
         bst.insert(&0);
         assert!(bst.contains(&0));
@@ -205,7 +205,45 @@ mod tests {
     }
 
     #[test]
-    fn it_contain_no_removed_element_two_element_inserted() {
+    fn it_removes_a_root_having_both_arms() {
+        let mut bst=BinarySearchTree::new();
+        bst.insert(&1);
+        bst.insert(&0);
+        bst.insert(&2);
+        assert!(bst.contains(&1));
+        bst.remove(&1);
+        assert!(bst.contains(&0));
+        assert!(!bst.contains(&1));
+        assert!(bst.contains(&2));
+        assert!(!bst.contains(&3));
+    }
+
+    #[test]
+    fn it_removes_a_root_having_only_left_arm() {
+        let mut bst=BinarySearchTree::new();
+        bst.insert(&1);
+        bst.insert(&0);
+        assert!(bst.contains(&1));
+        bst.remove(&1);
+        assert!(bst.contains(&0));
+        assert!(!bst.contains(&1));
+        assert!(!bst.contains(&2));
+    }
+
+    #[test]
+    fn it_removes_a_root_having_only_right_arm() {
+        let mut bst=BinarySearchTree::new();
+        bst.insert(&1);
+        bst.insert(&2);
+        assert!(bst.contains(&1));
+        bst.remove(&1);
+        assert!(!bst.contains(&0));
+        assert!(!bst.contains(&1));
+        assert!(bst.contains(&2));
+    }
+
+    #[test]
+    fn it_removes_a_leaf() {
         let mut bst=BinarySearchTree::new();
         bst.insert(&0);
         bst.insert(&1);
@@ -218,107 +256,41 @@ mod tests {
     }
 
     #[test]
-    fn it_contain_no_removed_element_three_element_inserted() {
+    fn it_removes_internal_element() {
         let mut bst=BinarySearchTree::new();
-        bst.insert(&0);
-        bst.insert(&1);
-        bst.insert(&2);
-        assert!(bst.contains(&2));
-        bst.remove(&2);
-        assert!(bst.contains(&0));
-        assert!(bst.contains(&1));
-        assert!(!bst.contains(&2));
-        assert!(!bst.contains(&3));
-    }
-
-    #[test]
-    fn it_contain_no_removed_element_four_element_inserted() {
-        let mut bst=BinarySearchTree::new();
-        bst.insert(&0);
-        bst.insert(&1);
-        bst.insert(&2);
-        bst.insert(&3);
-        assert!(bst.contains(&3));
-        bst.remove(&3);
-        assert!(bst.contains(&0));
-        assert!(bst.contains(&1));
-        assert!(bst.contains(&2));
-        assert!(!bst.contains(&3));
-        assert!(!bst.contains(&4));
-    }
-
-    #[test]
-    fn it_contain_no_removed_element_five_element_inserted() {
-        let mut bst=BinarySearchTree::new();
-        bst.insert(&0);
-        bst.insert(&1);
-        bst.insert(&2);
-        bst.insert(&3);
-        bst.insert(&4);
-        assert!(bst.contains(&4));
-        bst.remove(&4);
-        assert!(bst.contains(&0));
-        assert!(bst.contains(&1));
-        assert!(bst.contains(&2));
-        assert!(bst.contains(&3));
-        assert!(!bst.contains(&4));
-        assert!(!bst.contains(&5));
-    }
-
-    #[test]
-    fn it_contain_no_removed_internal_element() {
-        let mut bst=BinarySearchTree::new();
-        bst.insert(&0);
-        bst.insert(&1);
-        bst.insert(&2);
-        bst.insert(&3);
-        bst.insert(&4);
         bst.insert(&5);
-        bst.insert(&6);
+        bst.insert(&3);
         bst.insert(&7);
+        bst.insert(&2);
+        bst.insert(&4);
+        bst.insert(&6);
         bst.insert(&8);
-        bst.insert(&9);
-        assert!(bst.contains(&4));
-        bst.remove(&4);
-        assert!(bst.contains(&0));
-        assert!(bst.contains(&1));
+
         assert!(bst.contains(&2));
         assert!(bst.contains(&3));
-        assert!(!bst.contains(&4));
+        assert!(bst.contains(&4));
         assert!(bst.contains(&5));
         assert!(bst.contains(&6));
         assert!(bst.contains(&7));
         assert!(bst.contains(&8));
-        assert!(bst.contains(&9));
-        assert!(!bst.contains(&10));
-    }
 
-    extern crate rand;
+        bst.remove(&7);
+        assert!(bst.contains(&2));
+        assert!(bst.contains(&3));
+        assert!(bst.contains(&4));
+        assert!(bst.contains(&5));
+        assert!(bst.contains(&6));
+        assert!(!bst.contains(&7));
+        assert!(bst.contains(&8));
 
-    #[test]
-    fn it_contain_no_removed_internal_element_2() {
-        let mut bst=BinarySearchTree::new();
+        bst.remove(&3);
 
-        for i in 0..10 {
-            bst.insert(&i);
-        }
-
-        for i in 0..10 {
-            assert!(bst.contains(&i));
-        }
-
-        for _ in 0..10000 {
-            let number= rand::random::<u32>() % 10;
-
-            assert!(bst.contains(&number));
-            bst.remove(&number);
-            assert!(!bst.contains(&number));
-            bst.insert(&number);
-            assert!(bst.contains(&number));
-        }
-
-        for i in 0..10 {
-            assert!(bst.contains(&i));
-        }
+        assert!(bst.contains(&2));
+        assert!(!bst.contains(&3));
+        assert!(bst.contains(&4));
+        assert!(bst.contains(&5));
+        assert!(bst.contains(&6));
+        assert!(!bst.contains(&7));
+        assert!(bst.contains(&8));
     }
 }
