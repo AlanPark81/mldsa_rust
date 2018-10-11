@@ -17,6 +17,16 @@ impl<T> AVLNode<T> where T : Ord + Clone {
         }
     }
 
+    pub fn take_max_value(&mut self, data:&mut T) -> Option<Box<AVLNode<T>>> {
+        if self.right.is_none() {
+            *data=self.data.clone();
+            return self.left.clone();
+        } else {
+            self.right=self.right.as_mut().unwrap().take_max_value(data);
+            return Some(Box::new(self.clone()));
+        }
+    }
+
     pub fn insert(&mut self, data:&T) -> Box<AVLNode<T>> {
         if self.data>*data {
             self.left=self.left.as_mut().and_then(| tree | tree.insert(data).balance() ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
@@ -24,6 +34,38 @@ impl<T> AVLNode<T> where T : Ord + Clone {
             self.right=self.right.as_mut().and_then(| tree | tree.insert(data).balance() ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
         }
         return self.balance().unwrap();
+    }
+
+    pub fn remove(&mut self, data: &T) -> Option< Box < AVLNode<T> > > {
+        if self.data==*data {
+            if self.left.is_none() && self.right.is_none() {
+                return None;
+            } else if self.left.is_some() && self.right.is_none() {
+                let left = self.left.as_ref().unwrap().clone();
+
+                self.right = left.clone().right;
+                self.left = left.clone().left;
+                self.data = left.clone().data;
+
+            } else if self.left.is_none() && self.right.is_some() {
+                let right = self.right.as_ref().unwrap().clone();
+
+                self.right = right.clone().right;
+                self.left = right.clone().left;
+                self.data = right.clone().data;
+            } else {
+                let mut new_data;
+                new_data=self.data.clone();
+                self.left=self.left.as_mut().unwrap().take_max_value(&mut new_data);
+                self.data=new_data;
+            }
+        } else if self.data<*data && self.right.is_some() {
+            self.right=self.right.as_mut().unwrap().remove(data);
+        } else if self.data>*data && self.left.is_some() {
+            self.left=self.left.as_mut().unwrap().remove(data);
+        }
+
+        return self.balance()
     }
 
     fn level_diff(&self) -> i32 {
@@ -96,14 +138,18 @@ pub struct AVLTree<T> where T : Ord + Clone + Debug {
 }
 
 impl<T> AVLTree<T> where T : Ord + Clone + Debug {
-    pub fn new(data:&T) -> AVLTree<T> {
+    pub fn new() -> AVLTree<T> {
         AVLTree{
-            root:Some(Box::new(AVLNode::new(data)))
+            root: None
         }
     }
 
     pub fn traverse(&self, s:&str) {
         self.root.as_ref().and_then(|tree| Some(tree.traverse(s)) );
+    }
+
+    pub fn remove(&mut self, data: &T) {
+        self.root=self.root.as_mut().and_then(|root| { root.remove( data ) }).or(None);
     }
 
     pub fn insert(&mut self, data:&T) {
@@ -128,20 +174,23 @@ mod tests {
     use super::AVLTree;
     #[test]
     fn it_has_level_one_for_one_element(){
-        let avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         assert_eq!(avl_tree.level(),1);
     }
 
     #[test]
     fn it_has_level_two_for_two_elements(){
-        let mut avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         avl_tree.insert(&3);
         assert_eq!(avl_tree.level(),2);
     }
 
     #[test]
     fn it_has_level_two_for_three_elements(){
-        let mut avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         avl_tree.insert(&1);
         avl_tree.insert(&3);
         assert_eq!(avl_tree.level(),2);
@@ -149,7 +198,8 @@ mod tests {
 
     #[test]
     fn it_has_level_three_for_four_elements(){
-        let mut avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         avl_tree.insert(&1);
         avl_tree.insert(&2);
         avl_tree.insert(&3);
@@ -158,14 +208,147 @@ mod tests {
     }
 
     #[test]
+    fn it_has_level_one_for_one_element_minus_one(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.remove(&0);
+        assert_eq!(avl_tree.level(),0);
+        assert!(!avl_tree.contains(&0));
+    }
+
+    #[test]
+    fn it_has_level_two_for_two_elements_minus_one(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&3);
+        avl_tree.remove(&0);
+        assert_eq!(avl_tree.level(),1);
+        assert!(!avl_tree.contains(&0));
+        assert!(avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_two_for_three_elements_minus_one(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&1);
+        avl_tree.insert(&3);
+        avl_tree.remove(&0);
+        assert_eq!(avl_tree.level(),2);
+        assert!(!avl_tree.contains(&0));
+        assert!(avl_tree.contains(&1));
+        assert!(avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_three_for_four_elements_minus_one(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&1);
+        avl_tree.insert(&2);
+        avl_tree.insert(&3);
+        avl_tree.remove(&0);
+        assert_eq!(avl_tree.level(),2);
+        assert!(!avl_tree.contains(&0));
+        assert!(avl_tree.contains(&1));
+        assert!(avl_tree.contains(&2));
+        assert!(avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_one_for_one_element_minus_one_greatest(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.remove(&0);
+        assert_eq!(avl_tree.level(),0);
+        assert!(!avl_tree.contains(&0));
+    }
+
+    #[test]
+    fn it_has_level_two_for_two_elements_minus_one_greatest(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&3);
+        avl_tree.remove(&0);
+        assert_eq!(avl_tree.level(),1);
+        assert!(!avl_tree.contains(&0));
+        assert!(avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_two_for_three_elements_minus_one_greatest(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&1);
+        avl_tree.insert(&3);
+        avl_tree.remove(&3);
+        assert_eq!(avl_tree.level(),2);
+        assert!(avl_tree.contains(&0));
+        assert!(avl_tree.contains(&1));
+        assert!(!avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_three_for_four_elements_minus_one_greatest(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&1);
+        avl_tree.insert(&2);
+        avl_tree.insert(&3);
+        avl_tree.remove(&3);
+        assert_eq!(avl_tree.level(),2);
+        assert!(avl_tree.contains(&0));
+        assert!(avl_tree.contains(&1));
+        assert!(avl_tree.contains(&2));
+        assert!(!avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_two_for_three_elements_minus_one_media(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&1);
+        avl_tree.insert(&3);
+        avl_tree.remove(&1);
+        assert_eq!(avl_tree.level(),2);
+        assert!(avl_tree.contains(&0));
+        assert!(!avl_tree.contains(&1));
+        assert!(avl_tree.contains(&3));
+    }
+
+    #[test]
+    fn it_has_level_three_for_four_elements_minus_one_median(){
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
+        avl_tree.insert(&1);
+        avl_tree.insert(&2);
+        avl_tree.insert(&3);
+        avl_tree.remove(&2);
+        assert_eq!(avl_tree.level(),2);
+        assert!(avl_tree.contains(&0));
+        assert!(avl_tree.contains(&1));
+        assert!(!avl_tree.contains(&2));
+        assert!(avl_tree.contains(&3));
+
+        avl_tree.remove(&1);
+        assert_eq!(avl_tree.level(),2);
+        assert!(avl_tree.contains(&0));
+        assert!(!avl_tree.contains(&1));
+        assert!(!avl_tree.contains(&2));
+        assert!(avl_tree.contains(&3));
+    }
+
+    #[test]
     fn it_contains_one_element() {
-        let avl_tree=AVLTree::new(&1);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&1);
         assert!(avl_tree.contains(&1));
     }
 
     #[test]
     fn it_contains_two_elements(){
-        let mut avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         avl_tree.insert(&3);
         assert!(avl_tree.contains(&0));
         assert!(avl_tree.contains(&3));
@@ -173,7 +356,8 @@ mod tests {
 
     #[test]
     fn it_contains_three_elements(){
-        let mut avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         avl_tree.insert(&1);
         avl_tree.insert(&3);
         assert!(avl_tree.contains(&0));
@@ -183,7 +367,8 @@ mod tests {
 
     #[test]
     fn it_contains_four_elements(){
-        let mut avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         avl_tree.insert(&1);
         avl_tree.insert(&2);
         avl_tree.insert(&3);
@@ -195,22 +380,8 @@ mod tests {
 
     #[test]
     fn it_contains_no_not_included_element() {
-        let avl_tree=AVLTree::new(&0);
+        let mut avl_tree=AVLTree::new();
+        avl_tree.insert(&0);
         assert!(!avl_tree.contains(&13));
-    }
-
-    #[test]
-    fn it_works() {
-        let mut avl_tree=AVLTree::new(&0);
-        for i in 1..10 {
-            avl_tree.insert(&i);
-            assert!(avl_tree.contains(&i));
-            assert_eq!(avl_tree.level_diff(), 0);
-        }
-        for i in -10..0 {
-            avl_tree.insert(&i);
-            assert!(avl_tree.contains(&i));
-            assert_eq!(avl_tree.level_diff(), 0);
-        }
     }
 }
