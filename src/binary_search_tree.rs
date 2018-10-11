@@ -1,5 +1,4 @@
 use std::boxed::Box;
-use std::fmt::Debug;
 
 #[derive(Clone)]
 struct Node<T> {
@@ -8,44 +7,48 @@ struct Node<T> {
     data: T
 }
 
-impl<T> Node<T> where T : Clone + Ord + Debug {
+impl<T> Node<T> where T : Clone + Ord {
 
-    pub fn max_value(&self) -> T {
-        self.right.as_ref().and_then(|right| Some(right.max_value())).unwrap_or(self.data.clone())
+    pub fn take_max_value(&mut self, data:&mut T) -> Option<Box<Node<T>>> {
+        if self.right.is_none() {
+            *data=self.data.clone();
+            return self.left.clone();
+        } else {
+            self.right=self.right.as_mut().unwrap().take_max_value(data);
+            return Some( Box::new( self.clone() ));
+        }
     }
 
     pub fn remove(&mut self, data: &T) -> Option< Box < Node<T> > > {
         if self.data==*data {
-            if self.left.is_some() {
-                let left=self.left.as_ref().unwrap().clone();
-                if left.right.is_none() {
-                    self.data=left.data.clone();
-                    self.left=left.left.clone();
-                    return Some(Box::new(self.clone()))
-                } else {
-                    let new_data = left.max_value();
-                    self.left.as_mut().unwrap().remove(&new_data);
-                    self.data=new_data;
-                    return Some(Box::new(self.clone()))
-                }
-            } else if self.right.is_some() {
-                self.data=self.right.as_ref().unwrap().data.clone();
-                self.left=self.right.as_ref().unwrap().left.clone();
-                self.right=self.right.as_ref().unwrap().right.clone();
-                return Some(Box::new(self.clone()))
-            } else {
+            if self.left.is_none() && self.right.is_none() {
                 return None;
+            } else if self.left.is_some() && self.right.is_none() {
+                let left = self.left.as_ref().unwrap().clone();
+
+                self.right = left.clone().right;
+                self.left = left.clone().left;
+                self.data = left.clone().data;
+
+            } else if self.left.is_none() && self.right.is_some() {
+                let right = self.right.as_ref().unwrap().clone();
+
+                self.right = right.clone().right;
+                self.left = right.clone().left;
+                self.data = right.clone().data;
+            } else {
+                let mut new_data;
+                new_data=self.data.clone();
+                self.left=self.left.as_mut().unwrap().take_max_value(&mut new_data);
+                self.data=new_data;
             }
         } else if self.data<*data && self.right.is_some() {
             self.right=self.right.as_mut().unwrap().remove(data);
-            return Some(Box::new(self.clone()))
         } else if self.data>*data && self.left.is_some() {
             self.left=self.left.as_mut().unwrap().remove(data);
-            return Some(Box::new(self.clone()))
-        } else {
-            return None;
         }
 
+        return Some(Box::new(self.clone()))
     }
 
     pub fn contains(&self, data: &T )-> bool {
@@ -82,7 +85,7 @@ pub struct BinarySearchTree<T> {
     root:Option< Box< Node<T> > >
 }
 
-impl<T> BinarySearchTree<T> where T : Clone + Ord + Debug {
+impl<T> BinarySearchTree<T> where T : Clone + Ord {
     pub fn new() ->BinarySearchTree<T> {
         BinarySearchTree{
             root:None
@@ -290,6 +293,8 @@ mod tests {
         assert!(!bst.contains(&10));
     }
 
+    extern crate rand;
+
     #[test]
     fn it_contain_no_removed_internal_element_2() {
         let mut bst=BinarySearchTree::new();
@@ -302,53 +307,14 @@ mod tests {
             assert!(bst.contains(&i));
         }
 
-        for i in (0..10).rev() {
-            assert!(bst.contains(&i));
-            bst.remove(&i);
-            assert!(!bst.contains(&i));
-            bst.insert(&i);
-            assert!(bst.contains(&i));
-        }
+        for _ in 0..10000 {
+            let number= rand::random::<u32>() % 10;
 
-        for i in 0..10 {
-            assert!(bst.contains(&i));
-            bst.remove(&i);
-            assert!(!bst.contains(&i));
-            bst.insert(&i);
-            assert!(bst.contains(&i));
-        }
-
-        for i in (0..10).rev() {
-            assert!(bst.contains(&i));
-            bst.remove(&i);
-            assert!(!bst.contains(&i));
-            bst.insert(&i);
-            assert!(bst.contains(&i));
-        }
-
-        for i in 0..10 {
-            assert!(bst.contains(&i));
-            bst.remove(&i);
-            assert!(!bst.contains(&i));
-            bst.insert(&i);
-            assert!(bst.contains(&i));
-        }
-
-        for i in (0..10).rev() {
-            assert!(bst.contains(&i));
-            bst.remove(&i);
-            assert!(!bst.contains(&i));
-            bst.insert(&i);
-            assert!(bst.contains(&i));
-        }
-
-
-        for i in 0..10 {
-            assert!(bst.contains(&i));
-            bst.remove(&i);
-            assert!(!bst.contains(&i));
-            bst.insert(&i);
-            assert!(bst.contains(&i));
+            assert!(bst.contains(&number));
+            bst.remove(&number);
+            assert!(!bst.contains(&number));
+            bst.insert(&number);
+            assert!(bst.contains(&number));
         }
 
         for i in 0..10 {
