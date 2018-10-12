@@ -1,5 +1,5 @@
 use std::cmp::max;
-use std::fmt::Debug;
+pub use data_structures::binary_search_tree::BSTOps;
 
 #[derive(Clone)]
 struct AVLNode<T> {
@@ -117,51 +117,31 @@ impl<T> AVLNode<T> where T : Ord + Clone {
         || self.left.as_ref().and_then(|tree| Some(tree.contains(data)) ).unwrap_or(false)
         || self.right.as_ref().and_then(|tree| Some(tree.contains(data)) ).unwrap_or(false)
     }
-}
 
-impl<T> AVLNode<T> where T : Debug {
-    pub fn traverse(&self, s:&str) {
-        //let mut vec=Vec::new();
-        let tree=self.clone();
-        println!("{}{:?}", s, tree.data);
-        let mut left_tab=String::from(s);
-        left_tab.push_str("\t");
-        let mut right_tab=String::from(s);
-        right_tab.push_str("\t");
-        tree.left.as_ref().and_then(|tree| {tree.traverse( left_tab.as_str() ); Some(tree)} );
-        tree.right.as_ref().and_then(|tree| {tree.traverse( right_tab.as_str() ); Some(tree)} );
+    pub fn get_all_sorted(&self) -> Vec<T> {
+        let mut queue=Vec::new();
+        let mut left_queue=self.left.as_ref().and_then(|node| Some(node.get_all_sorted()) ).unwrap_or(Vec::new());
+        let mut right_queue=self.right.as_ref().and_then(|node| Some(node.get_all_sorted()) ).unwrap_or(Vec::new());
+        queue.append(&mut left_queue);
+        queue.push(self.data.clone());
+        queue.append(&mut right_queue);
+        return queue;
     }
 }
 
-pub struct AVLTree<T> where T : Ord + Clone + Debug {
+pub struct AVLTree<T> where T : Ord + Clone {
     root:Option<Box<AVLNode<T>>>
 }
 
-impl<T> AVLTree<T> where T : Ord + Clone + Debug {
+impl<T> AVLTree<T> where T : Ord + Clone {
     pub fn new() -> AVLTree<T> {
-        AVLTree{
+        AVLTree {
             root: None
         }
     }
 
-    pub fn traverse(&self, s:&str) {
-        self.root.as_ref().and_then(|tree| Some(tree.traverse(s)) );
-    }
-
-    pub fn remove(&mut self, data: &T) {
-        self.root=self.root.as_mut().and_then(|root| { root.remove( data ) }).or(None);
-    }
-
-    pub fn insert(&mut self, data:&T) {
-        self.root=self.root.as_mut().and_then(|tree| Some(tree.insert(&data.clone()))).or(Some(Box::new(AVLNode::new(data))));
-    }
-
     pub fn level(&self) -> usize {
         self.root.as_ref().and_then(|tree| Some(tree.level())).unwrap_or(0)
-    }
-
-    pub fn contains(&self, data: &T) -> bool {
-        self.root.as_ref().and_then(|tree| Some( tree.contains( data ) ) ).unwrap_or(false)
     }
 
     pub fn level_diff(&self) -> i32 {
@@ -169,9 +149,49 @@ impl<T> AVLTree<T> where T : Ord + Clone + Debug {
     }
 }
 
+impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
+    fn contains(&self, data: &T) -> bool {
+        self.root.as_ref().and_then(|tree| Some( tree.contains( data ) ) ).unwrap_or(false)
+    }
+
+    fn insert(&mut self, data:&T) {
+        self.root=self.root.as_mut().and_then(|tree| Some(tree.insert(&data.clone()))).or(Some(Box::new(AVLNode::new(data))));
+    }
+
+    fn remove(&mut self, data: &T) {
+        self.root=self.root.as_mut().and_then(|root| { root.remove( data ) }).or(None);
+    }
+
+    fn get_breadth_first(&self) -> Vec<T> {
+        let mut ret_array=Vec::new();
+        if self.root.is_none(){
+            return ret_array;
+        }
+
+        let mut queue=Vec::new();
+        queue.push(self.root.clone().unwrap());
+        while !queue.is_empty() {
+            let curr=queue.first_mut().unwrap().clone();
+            queue.remove(0);
+            ret_array.push(curr.data.clone());
+            if curr.left.is_some() {
+                queue.push(curr.left.clone().unwrap());
+            }
+            if curr.right.is_some() {
+                queue.push(curr.right.clone().unwrap());
+            }
+        }
+        return ret_array;
+    }
+
+    fn get_all_sorted(&self) -> Vec<T> {
+        self.root.as_ref().and_then(|root| Some(root.get_all_sorted())).unwrap_or(Vec::new())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::AVLTree;
+    use super::*;
     #[test]
     fn it_has_level_one_for_one_element(){
         let mut avl_tree=AVLTree::new();
@@ -383,5 +403,19 @@ mod tests {
         let mut avl_tree=AVLTree::new();
         avl_tree.insert(&0);
         assert!(!avl_tree.contains(&13));
+    }
+
+    #[test]
+    fn it_get_all_and_get_all_sorted() {
+        let mut bst=AVLTree::new();
+        bst.insert(&5);
+        bst.insert(&3);
+        bst.insert(&7);
+        bst.insert(&2);
+        bst.insert(&4);
+        bst.insert(&6);
+        bst.insert(&8);
+        assert_eq!(bst.get_breadth_first(), vec![5,3,7,2,4,6,8]);
+        assert_eq!(bst.get_all_sorted(), vec![2,3,4,5,6,7,8]);
     }
 }

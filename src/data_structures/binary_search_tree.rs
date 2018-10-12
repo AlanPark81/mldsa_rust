@@ -79,26 +79,32 @@ impl<T> Node<T> where T : Clone + Ord {
                 .or(Some( Box::new( Node {data: data.clone(), left: None, right: None}) ) );
         }
     }
+
+    pub fn get_all_sorted(&self) -> Vec<T> {
+        let mut queue=Vec::new();
+        let mut left_queue=self.left.as_ref().and_then(|node| Some(node.get_all_sorted()) ).unwrap_or(Vec::new());
+        let mut right_queue=self.right.as_ref().and_then(|node| Some(node.get_all_sorted()) ).unwrap_or(Vec::new());
+        queue.append(&mut left_queue);
+        queue.push(self.data.clone());
+        queue.append(&mut right_queue);
+        return queue;
+    }
 }
 
 pub struct BinarySearchTree<T> {
     root:Option< Box< Node<T> > >
 }
 
-impl<T> BinarySearchTree<T> where T : Clone + Ord {
-    pub fn new() ->BinarySearchTree<T> {
-        BinarySearchTree{
-            root:None
-        }
-    }
+pub trait BSTOps<T> {
+    fn contains(&self, data: &T) -> bool;
+    fn insert(&mut self, data: &T);
+    fn remove(&mut self, data: &T);
+    fn get_breadth_first(&self) -> Vec<T>;
+    fn get_all_sorted(&self) -> Vec<T>;
+}
 
-    pub fn create(data: &T) ->BinarySearchTree<T> {
-        BinarySearchTree{
-            root:Some(Box::new(Node{left: None, right: None, data: data.clone()}))
-        }
-    }
-
-    pub fn contains(&self, data: &T) -> bool {
+impl<T> BSTOps<T> for BinarySearchTree<T> where T : Ord + Clone {
+    fn contains(&self, data: &T) -> bool {
         if self.root.is_none() {return false}
         if *data==self.root.as_ref().unwrap().data{
             return true;
@@ -109,15 +115,15 @@ impl<T> BinarySearchTree<T> where T : Clone + Ord {
         }
     }
 
-    pub fn insert(&mut self, data: &T) {
+    fn insert(&mut self, data: &T) {
         self.root=self.root.as_mut().and_then(|node| { node.insert(data); Some(node.clone()) }).or_else(|| Some(Box::new(Node{data:data.clone(), left:None, right:None})));
     }
 
-    pub fn remove(&mut self, data: &T) {
+    fn remove(&mut self, data: &T) {
         self.root=self.root.as_mut().and_then(|root| { root.remove( data ) }).or(None);
     }
 
-    pub fn get_all(&self) -> Vec<T> {
+    fn get_breadth_first(&self) -> Vec<T> {
         let mut ret_array=Vec::new();
         if self.root.is_none(){
             return ret_array;
@@ -137,6 +143,24 @@ impl<T> BinarySearchTree<T> where T : Clone + Ord {
             }
         }
         return ret_array;
+    }
+
+    fn get_all_sorted(&self) -> Vec<T> {
+        self.root.as_ref().and_then(|root| Some(root.get_all_sorted())).unwrap_or(Vec::new())
+    }
+}
+
+impl<T> BinarySearchTree<T> where T : Clone + Ord {
+    pub fn new() ->BinarySearchTree<T> {
+        BinarySearchTree{
+            root:None
+        }
+    }
+
+    pub fn create(data: &T) ->BinarySearchTree<T> {
+        BinarySearchTree{
+            root:Some(Box::new(Node{left: None, right: None, data: data.clone()}))
+        }
     }
 }
 
@@ -292,5 +316,19 @@ mod tests {
         assert!(bst.contains(&6));
         assert!(!bst.contains(&7));
         assert!(bst.contains(&8));
+    }
+
+    #[test]
+    fn it_get_all_and_get_all_sorted() {
+        let mut bst=BinarySearchTree::new();
+        bst.insert(&5);
+        bst.insert(&3);
+        bst.insert(&7);
+        bst.insert(&2);
+        bst.insert(&4);
+        bst.insert(&6);
+        bst.insert(&8);
+        assert_eq!(bst.get_breadth_first(), vec![5,3,7,2,4,6,8]);
+        assert_eq!(bst.get_all_sorted(), vec![2,3,4,5,6,7,8]);
     }
 }
