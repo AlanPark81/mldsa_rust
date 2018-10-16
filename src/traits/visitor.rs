@@ -1,10 +1,10 @@
 use std::result::Result;
 
-trait Visitor<T, E> {
+pub trait Visitor<T, E> {
     fn visit(&mut self, data:&T) -> Result<T, E>;
 }
 
-trait VisitorAcceptor<T, E> {
+pub trait VisitorAcceptor<T, E> {
     fn accept<V>(&mut self, visitor:&mut V) where V : Visitor<T, E>;
 }
 

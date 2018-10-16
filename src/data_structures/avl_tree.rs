@@ -27,13 +27,15 @@ impl<T> AVLNode<T> where T : Ord + Clone {
         }
     }
 
-    pub fn insert(&mut self, data:&T) -> Box<AVLNode<T>> {
+    pub fn insert(&mut self, data:&T) {
         if self.data>*data {
-            self.left=self.left.as_mut().and_then(| tree | tree.insert(data).balance() ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
+            self.left=self.left.clone().and_then(| mut tree | { tree.insert(data); Some(tree) } ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
         } else {
-            self.right=self.right.as_mut().and_then(| tree | tree.insert(data).balance() ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
+            self.right=self.right.clone().and_then(| mut tree | { tree.insert(data); Some(tree) } ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
         }
-        return self.balance().unwrap();
+
+        assert!(self.left.as_ref().and_then(|left| Some(left.contains(data)) ).unwrap_or(false) ||
+            self.right.as_ref().and_then(|right| Some(right.contains(data)) ).unwrap_or(false) );
     }
 
     pub fn remove(&mut self, data: &T) -> Option< Box < AVLNode<T> > > {
@@ -65,13 +67,13 @@ impl<T> AVLNode<T> where T : Ord + Clone {
             self.left=self.left.as_mut().unwrap().remove(data);
         }
 
-        return self.balance()
+        return Some( Box::new(self.clone() ) );
     }
 
     fn level_diff(&self) -> i32 {
         let left_level=self.left.as_ref().and_then(|tree| { Some(tree.level())}).unwrap_or(0) as i32;
         let right_level=self.right.as_ref().and_then(|tree| { Some(tree.level())}).unwrap_or(0) as i32;
-        let diff=right_level-left_level;
+        let diff=left_level-right_level;
         if diff.abs() > 1 {
             diff
         } else {
@@ -81,7 +83,7 @@ impl<T> AVLNode<T> where T : Ord + Clone {
 
     fn rotate_left(&mut self) -> Option<Box<AVLNode<T>>>{
         let mut right=self.right.take();
-        if right.is_none() { return None; }
+        if right.is_none() { self.right=right; return None; }
         self.right=right.as_ref().and_then(|tree| { tree.left.clone() });
         right.as_mut().and_then(|tree| {tree.left=Some(Box::new(self.clone())); tree.left.clone()});
         right
@@ -89,7 +91,7 @@ impl<T> AVLNode<T> where T : Ord + Clone {
 
     fn rotate_right(&mut self) -> Option<Box<AVLNode<T>>>{
         let mut left=self.left.take();
-        if left.is_none() { return None; }
+        if left.is_none() { self.left=left; return None; }
         self.left=left.as_ref().and_then(|tree| { tree.right.clone() });
         left.as_mut().and_then(|tree| {tree.right=Some(Box::new(self.clone())); tree.right.clone()});
         left
@@ -97,12 +99,32 @@ impl<T> AVLNode<T> where T : Ord + Clone {
 
     fn balance(&mut self) -> Option<Box<AVLNode<T>>> {
         let diff=self.level_diff();
-        if diff==0 {
-            Some( Box::new(self.clone() ) )
-        } else if diff > 0 {
-            self.rotate_left()
+        if diff < -1 {
+            self.right=self.right.as_mut().and_then(|right| {
+                let level_diff=right.level_diff();
+                let mut right_new=right.clone();
+                if level_diff < -1 {
+                    right_new=right.rotate_left().unwrap_or(right_new);
+                } else if level_diff >= 0 {
+                    right_new=right.rotate_right().unwrap_or(right_new);
+                }
+                Some(right_new.clone())
+            }).or(None);
+            return self.rotate_left()
+        } else if diff > 1{
+            self.left=self.left.as_mut().and_then(|left| {
+                let level_diff=left.level_diff();
+                let mut left_new=left.clone();
+                if level_diff > 1 {
+                    left_new=left.rotate_right().unwrap_or(left_new);
+                } else if level_diff <= 0 {
+                    left_new=left.rotate_left().unwrap_or(left_new);
+                }
+                Some(left_new.clone())
+            }).or(None);
+            return self.rotate_right()
         } else {
-            self.rotate_right()
+            Some( Box::new(self.clone() ) )
         }
     }
 
@@ -155,11 +177,17 @@ impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
     }
 
     fn insert(&mut self, data:&T) {
-        self.root=self.root.as_mut().and_then(|tree| Some(tree.insert(&data.clone()))).or(Some(Box::new(AVLNode::new(data))));
+        self.root=self.root.as_mut()
+            .and_then(|tree| {
+                tree.insert(&data.clone());
+                return tree.balance() } )
+            .or(Some(Box::new(AVLNode::new(data))));
     }
 
     fn remove(&mut self, data: &T) {
-        self.root=self.root.as_mut().and_then(|root| { root.remove( data ) }).or(None);
+        self.root=self.root.as_mut().and_then(|root| {
+            root.remove( data ).as_mut().and_then(|tree| tree.balance() )
+        }).or(None);
     }
 
     fn get_breadth_first(&self) -> Vec<T> {
@@ -261,7 +289,7 @@ mod tests {
     }
 
     #[test]
-    fn it_has_level_three_for_four_elements_minus_one(){
+    fn it_has_level_two_for_four_elements_minus_one(){
         let mut avl_tree=AVLTree::new();
         avl_tree.insert(&0);
         avl_tree.insert(&1);
@@ -276,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn it_has_level_one_for_one_element_minus_one_greatest(){
+    fn it_has_level_zero_for_one_element_minus_one_greatest(){
         let mut avl_tree=AVLTree::new();
         avl_tree.insert(&0);
         avl_tree.remove(&0);
@@ -417,5 +445,49 @@ mod tests {
         bst.insert(&8);
         assert_eq!(bst.get_breadth_first(), vec![5,3,7,2,4,6,8]);
         assert_eq!(bst.get_all_sorted(), vec![2,3,4,5,6,7,8]);
+    }
+
+    #[test]
+    fn balance_test_insert() {
+        let mut avl_tree=AVLTree::new();
+        for i in 0..100 {
+            avl_tree.insert(&i);
+            assert!( avl_tree.root.as_ref().and_then(|root| {
+                let diff=root.level_diff();
+                Some(diff<2 && diff>-2)
+            } ).unwrap_or(true) );
+        }
+
+        for i in 0..100 {
+            assert!(avl_tree.contains(&i));
+        }
+    }
+
+    #[test]
+    fn balance_test_remove() {
+        let mut avl_tree=AVLTree::new();
+        for i in 0..100 {
+            avl_tree.insert(&i);
+            assert!( avl_tree.root.as_ref().and_then(|root| {
+                let diff=root.level_diff();
+                Some(diff<2 && diff>-2)
+            } ).unwrap_or(true) );
+        }
+
+        for i in 0..100 {
+            assert!(avl_tree.contains(&i));
+        }
+
+        for i in 0..100 {
+            avl_tree.remove(&i);
+            assert!( avl_tree.root.as_ref().and_then(|root| {
+                let diff=root.level_diff();
+                Some(diff<2 && diff>-2)
+            } ).unwrap_or(true) );
+        }
+
+        for i in 0..100 {
+            assert!( !avl_tree.contains(&i) );
+        }
     }
 }
