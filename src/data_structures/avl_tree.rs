@@ -17,13 +17,36 @@ impl<T> AVLNode<T> where T : Ord + Clone {
         }
     }
 
-    pub fn take_max_value(&mut self, data:&mut T) -> Option<Box<AVLNode<T>>> {
-        if self.right.is_none() {
-            *data=self.data.clone();
-            return self.left.clone();
-        } else {
-            self.right=self.right.as_mut().unwrap().take_max_value(data);
-            return Some(Box::new(self.clone()));
+    pub fn take_median_value(&mut self) {
+        if self.right.is_some() {
+            let mut parent_node = self.right.clone();
+            let mut curr_node = parent_node.clone().unwrap().left;
+            if curr_node.is_none() {
+                self.data=self.right.clone().unwrap().data;
+                self.right=None;
+                return;
+            }
+            while curr_node.as_ref().unwrap().left.is_some() {
+                parent_node = curr_node.clone();
+                curr_node = curr_node.unwrap().left;
+            }
+            self.data=parent_node.as_ref().unwrap().data.clone();
+            parent_node.as_mut().unwrap().left=None;
+        }
+        else if self.left.is_some() {
+            let mut parent_node = self.left.clone();
+            let mut curr_node = parent_node.clone().unwrap().right;
+            if curr_node.is_none() {
+                self.data=self.left.clone().unwrap().data;
+                self.left=None;
+                return;
+            }
+            while curr_node.as_ref().unwrap().right.is_some() {
+                parent_node = curr_node.clone();
+                curr_node = curr_node.unwrap().right;
+            }
+            self.data=parent_node.as_ref().unwrap().data.clone();
+            parent_node.as_mut().unwrap().right=None;
         }
     }
 
@@ -45,21 +68,18 @@ impl<T> AVLNode<T> where T : Ord + Clone {
             } else if self.left.is_some() && self.right.is_none() {
                 let left = self.left.as_ref().unwrap().clone();
 
-                self.right = left.clone().right;
-                self.left = left.clone().left;
-                self.data = left.clone().data;
+                self.right = left.right.clone();
+                self.left = left.left.clone();
+                self.data = left.data.clone();
 
             } else if self.left.is_none() && self.right.is_some() {
                 let right = self.right.as_ref().unwrap().clone();
 
-                self.right = right.clone().right;
-                self.left = right.clone().left;
-                self.data = right.clone().data;
+                self.right = right.right.clone();
+                self.left = right.left.clone();
+                self.data = right.data.clone();
             } else {
-                let mut new_data;
-                new_data=self.data.clone();
-                self.left=self.left.as_mut().unwrap().take_max_value(&mut new_data);
-                self.data=new_data;
+                self.take_median_value();
             }
         } else if self.data<*data && self.right.is_some() {
             self.right=self.right.as_mut().unwrap().remove(data);
