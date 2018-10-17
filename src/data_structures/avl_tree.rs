@@ -1,6 +1,7 @@
 use std::cmp::max;
 pub use data_structures::binary_search_tree::BSTOps;
 pub use traits::visitor::{ VisitorAcceptor, Visitor };
+pub use data_structures::set::*;
 
 #[derive(Clone)]
 struct AVLNode<T> {
@@ -192,11 +193,19 @@ impl<T> AVLTree<T> where T : Ord + Clone {
     }
 }
 
-impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
+impl<T> CreateSet for AVLTree<T>  where T : Ord + Clone {
+    fn create_set() -> AVLTree<T> {
+        AVLTree::new()
+    }
+}
+
+impl<T> Contains<T> for AVLTree<T> where T : Ord + Clone {
     fn contains(&self, data: &T) -> bool {
         self.root.as_ref().and_then(|tree| Some( tree.contains( data ) ) ).unwrap_or(false)
     }
+}
 
+impl<T> Insert<T> for AVLTree<T> where T : Ord + Clone {
     fn insert(&mut self, data:&T) {
         self.root=self.root.as_mut()
             .and_then(|tree| {
@@ -204,13 +213,14 @@ impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
                 return tree.balance() } )
             .or(Some(Box::new(AVLNode::new(data))));
     }
+}
 
+impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
     fn remove(&mut self, data: &T) {
         self.root=self.root.as_mut().and_then(|root| {
             root.remove( data ).as_mut().and_then(|tree| tree.balance() )
         }).or(None);
     }
-
     fn get_breadth_first(&self) -> Vec<T> {
         let mut ret_array=Vec::new();
         if self.root.is_none(){
@@ -232,7 +242,6 @@ impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
         }
         return ret_array;
     }
-
     fn get_all_sorted(&self) -> Vec<T> {
         self.root.as_ref().and_then(|root| Some(root.get_all_sorted())).unwrap_or(Vec::new())
     }
@@ -253,8 +262,7 @@ impl<'a, T> VisitorAcceptor<T, &'a str> for AVLTree<T> where T : Ord + Clone {
             queue.swap_remove(0).as_mut().and_then(|node| {
                 queue.push(node.left.clone());
                 queue.push(node.right.clone());
-                node.accept(visitor);
-                Some(())
+                node.accept(visitor).ok()
             });
         }
         return Ok(());
@@ -560,7 +568,7 @@ mod tests {
             tree.insert(&i);
         }
         let mut visitor=FootprintsVisitor::new();
-        tree.accept(&mut visitor);
+        tree.accept(&mut visitor).ok();
 
         let expected_seq= vec![5, 3, 6, 4, 7, 8, 9, 1, 0, 2];
 

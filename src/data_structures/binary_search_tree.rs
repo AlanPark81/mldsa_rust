@@ -1,4 +1,5 @@
 use std::boxed::Box;
+use data_structures::set::*;
 
 #[derive(Clone)]
 struct Node<T> {
@@ -96,29 +97,49 @@ pub struct BinarySearchTree<T> {
 }
 
 pub trait BSTOps<T> {
-    fn contains(&self, data: &T) -> bool;
-    fn insert(&mut self, data: &T);
     fn remove(&mut self, data: &T);
     fn get_breadth_first(&self) -> Vec<T>;
     fn get_all_sorted(&self) -> Vec<T>;
 }
 
-impl<T> BSTOps<T> for BinarySearchTree<T> where T : Ord + Clone {
+impl<T> Contains<T> for BinarySearchTree<T> where T : Ord + Clone {
     fn contains(&self, data: &T) -> bool {
-        if self.root.is_none() {return false}
-        if *data==self.root.as_ref().unwrap().data{
+        if self.root.is_none() { return false }
+        if *data == self.root.as_ref().unwrap().data {
             return true;
         } else if *data < self.root.as_ref().unwrap().data {
-            return self.root.as_ref().unwrap().left.as_ref().and_then(|tree| { Some(tree.contains(data))}).unwrap_or(false);
+            return self.root.as_ref().unwrap().left.as_ref().and_then(|tree| { Some(tree.contains(data)) }).unwrap_or(false);
         } else {
-            return self.root.as_ref().unwrap().right.as_ref().and_then(|tree| { Some(tree.contains(data))}).unwrap_or(false);
+            return self.root.as_ref().unwrap().right.as_ref().and_then(|tree| { Some(tree.contains(data)) }).unwrap_or(false);
         }
     }
+}
 
+impl<T> CreateSet for BinarySearchTree<T>  where T : Ord + Clone {
+    fn create_set() -> BinarySearchTree<T> {
+        BinarySearchTree::new()
+    }
+}
+
+impl<T> Insert<T> for BinarySearchTree<T> where T : Ord + Clone {
     fn insert(&mut self, data: &T) {
         self.root=self.root.as_mut().and_then(|node| { node.insert(data); Some(node.clone()) }).or_else(|| Some(Box::new(Node{data:data.clone(), left:None, right:None})));
     }
+}
 
+impl<T> IsEmpty for BinarySearchTree<T> {
+    fn is_empty(&self) -> bool {
+        self.root.is_none()
+    }
+}
+
+impl<T> GetAllElements<T> for BinarySearchTree<T>  where T : Ord + Clone {
+    fn get_all_elements(&self) -> Vec<T> {
+        self.get_breadth_first()
+    }
+}
+
+impl<T> BSTOps<T> for BinarySearchTree<T> where T : Ord + Clone {
     fn remove(&mut self, data: &T) {
         self.root=self.root.as_mut().and_then(|root| { root.remove( data ) }).or(None);
     }

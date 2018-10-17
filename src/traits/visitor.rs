@@ -42,7 +42,7 @@ mod tests {
         }
 
         let mut visitor=AppendVisitor{history:Vec::new()};
-        list.accept(&mut visitor);
+        list.accept(&mut visitor).ok();
         assert_eq!(visitor.history, vec![0,1,2,3,4,5,6,7,8,9]);
     }
 }
