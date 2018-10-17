@@ -5,7 +5,7 @@ pub trait Visitor<T, E> {
 }
 
 pub trait VisitorAcceptor<T, E> {
-    fn accept<V>(&mut self, visitor:&mut V) where V : Visitor<T, E>;
+    fn accept<V>(&mut self, visitor:&mut V) -> Result<(), E> where V : Visitor<T, E>;
 }
 
 #[cfg(test)]
@@ -26,10 +26,11 @@ mod tests {
     }
 
     impl<T> VisitorAcceptor<T, String> for LinkedList<T> where T : Debug + Clone {
-        fn accept<V>(&mut self, visitor:&mut V) where V : Visitor<T, String>{
+        fn accept<V>(&mut self, visitor:&mut V) -> Result<(), String> where V : Visitor<T, String>{
             for item in self.iter(){
-                visitor.visit(&item).unwrap();
+                visitor.visit(&item)?;
             }
+            Ok(())
         }
     }
 

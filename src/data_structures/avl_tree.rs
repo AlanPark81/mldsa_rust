@@ -1,5 +1,6 @@
 use std::cmp::max;
 pub use data_structures::binary_search_tree::BSTOps;
+pub use traits::visitor::{ VisitorAcceptor, Visitor };
 
 #[derive(Clone)]
 struct AVLNode<T> {
@@ -234,6 +235,29 @@ impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
 
     fn get_all_sorted(&self) -> Vec<T> {
         self.root.as_ref().and_then(|root| Some(root.get_all_sorted())).unwrap_or(Vec::new())
+    }
+}
+
+impl<'a, T> VisitorAcceptor<T, &'a str> for AVLNode<T> where T : Ord + Clone {
+    fn accept<V>(&mut self, visitor:&mut V) -> Result<(), &'a str> where V : Visitor<T, &'a str> {
+        self.data=visitor.visit(&self.data)?;
+        Ok(())
+    }
+}
+
+impl<'a, T> VisitorAcceptor<T, &'a str> for AVLTree<T> where T : Ord + Clone {
+    fn accept<V>(&mut self, visitor:&mut V) -> Result<(), &'a str> where V : Visitor<T, &'a str> {
+        let mut queue = Vec::new();
+        queue.push(self.root.clone());
+        while !queue.is_empty() {
+            queue.swap_remove(0).as_mut().and_then(|node| {
+                queue.push(node.left.clone());
+                queue.push(node.right.clone());
+                node.accept(visitor);
+                Some(())
+            });
+        }
+        return Ok(());
     }
 }
 
@@ -508,6 +532,41 @@ mod tests {
 
         for i in 0..100 {
             assert!( !avl_tree.contains(&i) );
+        }
+    }
+
+    #[test]
+    fn visitor_test() {
+        struct FootprintsVisitor {
+            pub footprints : Vec<u32>,
+        }
+
+        impl FootprintsVisitor {
+            fn new() -> FootprintsVisitor { FootprintsVisitor {
+                footprints : Vec::new()
+            }}
+        }
+
+        impl<'a> Visitor<u32, &'a str> for FootprintsVisitor {
+            fn visit(&mut self, data:&u32) -> Result<u32, &'a str> {
+                self.footprints.push(data.clone());
+                Ok(data.clone())
+            }
+        }
+
+        let mut tree=AVLTree::new();
+
+        for i in 0..10 {
+            tree.insert(&i);
+        }
+        let mut visitor=FootprintsVisitor::new();
+        tree.accept(&mut visitor);
+
+        let expected_seq= vec![5, 3, 6, 4, 7, 8, 9, 1, 0, 2];
+
+        assert_eq!(visitor.footprints.len(), 10);
+        for i in 0..visitor.footprints.len() {
+            assert_eq!(visitor.footprints[i], expected_seq[i]);
         }
     }
 }
