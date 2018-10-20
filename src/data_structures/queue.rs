@@ -1,21 +1,35 @@
 use data_structures::linked_list::LinkedList;
 
-struct Queue<T> where T : Clone {
+pub struct Queue<T> where T : Clone {
     list:LinkedList<T>
 }
+
+pub trait Enqueue<T> where T : Clone {
+    fn enqueue(&mut self, data:&T);
+}
+
+pub trait Dequeue<T> where T : Clone {
+    fn dequeue(&mut self) -> Option<T>;
+}
+
+impl<T> Enqueue<T> for Queue<T> where T : Clone {
+    fn enqueue(&mut self, data:&T) {
+        self.list.insert_back(data);
+    }
+}
+
+impl<T> Dequeue<T> for Queue<T> where T : Clone {
+    fn dequeue(&mut self) -> Option<T> {
+        self.list.pop_front()
+    }
+}
+
 
 impl<T> Queue<T> where T : Clone {
     pub fn new() -> Queue<T> {
         Queue {
             list: LinkedList::<T>::new()
         }
-    }
-    pub fn enqueue(&mut self, data:&T) {
-        self.list.insert_back(data);
-    }
-
-    pub fn dequeue(&mut self) -> Option<T> {
-        self.list.pop_front()
     }
 
     pub fn empty(&self) -> bool {
@@ -30,6 +44,8 @@ impl<T> Queue<T> where T : Clone {
 #[cfg(test)]
 mod tests{
     use super::Queue;
+    use super::Enqueue;
+    use super::Dequeue;
 
     #[test]
     fn queue_dequeue_for_empty_queue() {
