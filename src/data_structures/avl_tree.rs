@@ -52,15 +52,19 @@ impl<T> AVLNode<T> where T : Ord + Clone {
         }
     }
 
-    pub fn insert(&mut self, data:&T) {
+    pub fn insert(&mut self, data:&T) -> Option< Box< AVLNode< T > > >{
         if self.data>*data {
-            self.left=self.left.clone().and_then(| mut tree | { tree.insert(data); Some(tree) } ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
+            self.left=self.left.clone()
+                .and_then(| mut tree | {
+                    tree.insert(data).as_mut().and_then(|node| node.balance() )
+                } ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
         } else {
-            self.right=self.right.clone().and_then(| mut tree | { tree.insert(data); Some(tree) } ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
+            self.right=self.right.clone()
+                .and_then(| mut tree | {
+                    tree.insert(data).as_mut().and_then(|node| node.balance() )
+                } ).or(Some( Box::new( AVLNode{data:data.clone(), left:None, right:None} )));
         }
-
-        assert!(self.left.as_ref().and_then(|left| Some(left.contains(data)) ).unwrap_or(false) ||
-            self.right.as_ref().and_then(|right| Some(right.contains(data)) ).unwrap_or(false) );
+        return self.balance();
     }
 
     pub fn remove(&mut self, data: &T) -> Option< Box < AVLNode<T> > > {
@@ -73,7 +77,6 @@ impl<T> AVLNode<T> where T : Ord + Clone {
                 self.right = left.right.clone();
                 self.left = left.left.clone();
                 self.data = left.data.clone();
-
             } else if self.left.is_none() && self.right.is_some() {
                 let right = self.right.as_ref().unwrap().clone();
 
@@ -83,13 +86,14 @@ impl<T> AVLNode<T> where T : Ord + Clone {
             } else {
                 self.take_median_value();
             }
+
         } else if self.data<*data && self.right.is_some() {
-            self.right=self.right.as_mut().unwrap().remove(data);
+            self.right=self.right.as_mut().and_then(|right| { right.remove(data).as_mut().and_then( |tree| tree.balance() ) });
         } else if self.data>*data && self.left.is_some() {
-            self.left=self.left.as_mut().unwrap().remove(data);
+            self.left=self.left.as_mut().and_then(|left| { left.remove(data).as_mut().and_then( |tree| tree.balance())});
         }
 
-        return Some( Box::new(self.clone() ) );
+        return self.balance();
     }
 
     fn level_diff(&self) -> i32 {
@@ -208,9 +212,8 @@ impl<T> Contains<T> for AVLTree<T> where T : Ord + Clone {
 impl<T> Insert<T> for AVLTree<T> where T : Ord + Clone {
     fn insert(&mut self, data:&T) {
         self.root=self.root.as_mut()
-            .and_then(|tree| {
-                tree.insert(&data.clone());
-                return tree.balance() } )
+            .and_then(|tree|
+                tree.insert(&data.clone()) )
             .or(Some(Box::new(AVLNode::new(data))));
     }
 }
@@ -259,7 +262,9 @@ impl<'a, T> VisitorAcceptor<T, &'a str> for AVLTree<T> where T : Ord + Clone {
         let mut queue = Vec::new();
         queue.push(self.root.clone());
         while !queue.is_empty() {
-            queue.swap_remove(0).as_mut().and_then(|node| {
+            let mut first_node = queue[0].clone();
+            queue.remove(0);
+            first_node.as_mut().and_then(|node| {
                 queue.push(node.left.clone());
                 queue.push(node.right.clone());
                 node.accept(visitor).ok()
@@ -396,11 +401,11 @@ mod tests {
         avl_tree.insert(&2);
         avl_tree.insert(&3);
         avl_tree.remove(&3);
-        assert_eq!(avl_tree.level(),2);
         assert!(avl_tree.contains(&0));
         assert!(avl_tree.contains(&1));
         assert!(avl_tree.contains(&2));
         assert!(!avl_tree.contains(&3));
+        assert_eq!(avl_tree.level(),2);
     }
 
     #[test]
@@ -531,6 +536,7 @@ mod tests {
         }
 
         for i in 0..100 {
+
             avl_tree.remove(&i);
             assert!( avl_tree.root.as_ref().and_then(|root| {
                 let diff=root.level_diff();
@@ -570,11 +576,12 @@ mod tests {
         let mut visitor=FootprintsVisitor::new();
         tree.accept(&mut visitor).ok();
 
-        let expected_seq= vec![5, 3, 6, 4, 7, 8, 9, 1, 0, 2];
+        let expected_seq= vec![4, 2, 8, 1, 3, 6, 9, 0, 5, 7];
 
         assert_eq!(visitor.footprints.len(), 10);
         for i in 0..visitor.footprints.len() {
             assert_eq!(visitor.footprints[i], expected_seq[i]);
         }
+
     }
 }
