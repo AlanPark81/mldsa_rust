@@ -218,6 +218,18 @@ impl<T> Insert<T> for AVLTree<T> where T : Ord + Clone {
     }
 }
 
+impl<T> GetAllElements<T> for AVLTree<T> where T : Ord + Clone {
+    fn get_all_elements(&self) -> Vec<T> {
+        return self.get_breadth_first();
+    }
+}
+
+impl<T> IsEmpty for AVLTree<T> where T : Ord + Clone {
+    fn is_empty(&self) -> bool {
+        self.root.is_none()
+    }
+}
+
 impl<T> BSTOps<T> for AVLTree<T> where T : Ord + Clone {
     fn remove(&mut self, data: &T) {
         self.root=self.root.as_mut().and_then(|root| {
@@ -273,6 +285,8 @@ impl<'a, T> VisitorAcceptor<T, &'a str> for AVLTree<T> where T : Ord + Clone {
         return Ok(());
     }
 }
+
+impl<T> Set<T> for AVLTree<T> where T : Clone + Ord {}
 
 #[cfg(test)]
 mod tests {

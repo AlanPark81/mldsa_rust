@@ -1,6 +1,5 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::fmt::Debug;
 
 type OptionLink<T> = Option<Rc<RefCell<Node<T>>>>;
 
@@ -15,7 +14,7 @@ pub struct ListIterator<T> {
     next_node:OptionLink<T>
 }
 
-impl<T> Iterator for ListIterator<T> where T : Clone + Debug {
+impl<T> Iterator for ListIterator<T> where T : Clone {
     type Item=T;
     fn next(&mut self) -> Option<Self::Item>{
         self.next_node.take().and_then(|next_node| {
@@ -30,7 +29,7 @@ pub struct LinkedList<T> {
     size: usize
 }
 
-impl<T> LinkedList<T> where T: Clone + Debug {
+impl<T> LinkedList<T> where T: Clone {
     pub fn new() -> LinkedList<T> {
         LinkedList{
             head:None,
@@ -164,6 +163,7 @@ impl<T> LinkedList<T> where T: Clone + Debug {
             let ret_val=self.head.as_ref().and_then(|link| Some(link.borrow().data.clone())).or(None);
             self.head=None;
             self.tail=None;
+            self.size=0;
             return ret_val;
         }
         self.head.take().and_then( |value| {
