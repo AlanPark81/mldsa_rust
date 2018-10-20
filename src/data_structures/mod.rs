@@ -5,3 +5,4 @@ pub mod linked_list;
 pub mod merkle_tree;
 pub mod set;
 pub mod queue;
+pub mod stack;

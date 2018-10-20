@@ -181,6 +181,7 @@ impl<T> LinkedList<T> where T: Clone {
             let ret_val=self.head.as_ref().and_then(|link| Some(link.borrow().data.clone())).or(None);
             self.head=None;
             self.tail=None;
+            self.size-=1;
             return ret_val;
         }
         self.tail.take().and_then( |value| {
