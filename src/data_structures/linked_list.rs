@@ -998,4 +998,19 @@ mod tests{
             expected_seq.remove(0);
         }
     }
+
+    extern crate test;
+    use self::test::Bencher;
+
+    #[bench]
+    fn bench_insert_back(b: &mut Bencher) {
+        let mut list=LinkedList::new();
+        
+        for i in 1..10000000 {
+            list.insert_back(&i);
+        }
+        b.iter(|| {
+            list.insert_back(&1);
+        });
+    }
 }
